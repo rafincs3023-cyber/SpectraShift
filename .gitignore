@@ -1,0 +1,37 @@
+# --- Secrets / environment ---
+.env
+.env.local
+.env.*.local
+*.pem
+*.key
+*credentials*
+*secret*
+*token*
+
+# --- Python (backend) ---
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+env/
+*.log
+
+# Backend generated image caches (regenerable from FITS data)
+backend/preview_cache/
+backend/cutout_cache/
+
+# --- Node / frontend ---
+node_modules/
+dist/
+dist-ssr/
+*.local
+frontend/node_modules/
+frontend/dist/
+
+# --- Editor / OS ---
+.vscode/*
+!.vscode/extensions.json
+.idea/
+.DS_Store
+Thumbs.db
