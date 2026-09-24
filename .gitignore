@@ -35,3 +35,9 @@ frontend/dist/
 .idea/
 .DS_Store
 Thumbs.db
+
+# Large SPHEREx data
+data/spherex/*.fits
+data/spherex/*.fits.gz
+# Derived Spectral View access cache (rebuild with backend/build_spectral_cache.py)
+data/spherex/cache/

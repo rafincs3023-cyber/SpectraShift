@@ -5,6 +5,7 @@ import { Candidates } from "./pages/Candidates";
 import { CandidateDetail } from "./pages/CandidateDetail";
 import { Compare } from "./pages/Compare";
 import { Explore } from "./pages/Explore";
+import { SpectralView } from "./pages/SpectralView";
 import { About } from "./pages/About";
 import { Help } from "./pages/Help";
 import { NotFound } from "./pages/NotFound";
@@ -16,6 +17,7 @@ function App() {
         <Route index element={<Home />} />
         <Route path="explore" element={<Explore />} />
         <Route path="compare" element={<Compare />} />
+        <Route path="spectral" element={<SpectralView />} />
         <Route path="candidates" element={<Candidates />} />
         <Route path="candidates/:id" element={<CandidateDetail />} />
         <Route path="about" element={<About />} />

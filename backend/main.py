@@ -28,6 +28,7 @@ from data_access import (
 )
 import images
 import spectrum
+from spectral_api import router as spectral_router
 
 app = FastAPI(
     title="SpectraShift API",
@@ -49,6 +50,10 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Spectral View (102-channel SPHEREx mosaic cubes) -- separate from the
+# A/C/B Time Compare routes below; see spectral_api.py.
+app.include_router(spectral_router)
 
 
 def _candidate_summary_records() -> list[dict[str, Any]]:

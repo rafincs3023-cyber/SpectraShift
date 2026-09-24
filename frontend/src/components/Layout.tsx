@@ -4,6 +4,7 @@ const NAV_LINKS = [
   { to: "/", label: "Home", end: true },
   { to: "/explore", label: "Explore" },
   { to: "/compare", label: "Compare" },
+  { to: "/spectral", label: "Spectral View" },
   { to: "/candidates", label: "Candidates" },
   { to: "/about", label: "About" },
   { to: "/help", label: "Help" },

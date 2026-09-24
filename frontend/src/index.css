@@ -1026,3 +1026,384 @@ code {
   font-size: 11px;
   font-weight: 700;
 }
+
+/* ---------- spectral view (102-channel mosaic) ----------
+   All rules are scoped to spectral-* classes; the shared ZoomPanViewer is
+   only restyled inside .spectral-viewer. */
+
+.spectral-mode-compare {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 0.75rem;
+  margin: -0.5rem 0 1.25rem;
+}
+
+.spectral-mode {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  padding: 0.7rem 0.95rem;
+  border: 1px solid var(--panel-border);
+  border-radius: 10px;
+  background: var(--panel);
+  color: var(--text-muted);
+  font-size: 0.84rem;
+  text-decoration: none;
+}
+.spectral-mode strong { color: var(--text-h); font-weight: 600; font-size: 0.9rem; }
+a.spectral-mode:hover { border-color: var(--accent); }
+.spectral-mode-active { border-color: var(--accent); background: var(--accent-bg); }
+.spectral-mode-active strong { color: var(--accent-strong); }
+
+.spectral-channel-card { padding-bottom: 1rem; }
+
+.spectral-channel-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+.spectral-eyebrow { margin-bottom: 0.2rem; }
+.spectral-channel-title { color: var(--text); font-size: 1.15rem; margin: 0; }
+.spectral-channel-title strong { color: var(--text-h); font-variant-numeric: tabular-nums; }
+.spectral-keys { margin: 0; }
+
+/* wavelength bar */
+
+.wl-bar { margin: 2rem 0 0.8rem; }
+
+.wl-bar-labels {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  color: var(--text-muted);
+  font-size: 0.74rem;
+  margin-top: 0.25rem;
+}
+
+.wl-bar-track {
+  position: relative;
+  height: 34px;
+  border-radius: 7px;
+  background: var(--bg-elevated);
+  border: 1px solid var(--panel-border);
+  cursor: pointer;
+  overflow: visible;
+}
+
+.wl-bar-det {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding-bottom: 2px;
+  background: rgba(137, 146, 168, 0.08);
+}
+.wl-bar-det-alt { background: rgba(137, 146, 168, 0.16); }
+.wl-bar-det span { font-size: 0.62rem; color: var(--text-muted); pointer-events: none; }
+
+.wl-bar-band {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  background: rgba(94, 184, 255, 0.35);
+  pointer-events: none;
+}
+
+.wl-bar-marker {
+  position: absolute;
+  top: -4px;
+  bottom: -4px;
+  width: 2px;
+  transform: translateX(-1px);
+  background: var(--accent-strong);
+  box-shadow: 0 0 8px rgba(143, 208, 255, 0.7);
+  pointer-events: none;
+  transition: left 0.12s ease-out;
+}
+
+.wl-bar-marker-label {
+  position: absolute;
+  top: -1.45rem;
+  left: 50%;
+  transform: translateX(-50%);
+  white-space: nowrap;
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: var(--accent-strong);
+  background: rgba(6, 10, 18, 0.9);
+  padding: 0 0.35rem;
+  border-radius: 4px;
+}
+.wl-bar-marker-label-start { left: -2px; transform: none; }
+.wl-bar-marker-label-end { left: auto; right: -2px; transform: none; }
+
+.wl-bar-ticks { position: relative; height: 1.1rem; }
+.wl-bar-ticks span {
+  position: absolute;
+  top: 0.15rem;
+  transform: translateX(-50%);
+  font-size: 0.68rem;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+/* channel controls */
+
+.channel-controls {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  flex-wrap: wrap;
+}
+
+.channel-step { padding: 0.45rem 0.8rem; }
+.channel-step:disabled { opacity: 0.4; cursor: not-allowed; }
+.channel-step:disabled:hover { border-color: var(--panel-border); color: var(--text); }
+
+.channel-slider {
+  flex: 1;
+  min-width: 160px;
+  accent-color: var(--accent);
+}
+
+.channel-jump {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+.channel-jump input,
+.radec-form input {
+  background: var(--panel);
+  border: 1px solid var(--panel-border);
+  color: var(--text-h);
+  border-radius: 7px;
+  padding: 0.45rem 0.55rem;
+  font-size: 0.88rem;
+  font-variant-numeric: tabular-nums;
+}
+.channel-jump input { width: 4.6rem; }
+.channel-jump input[aria-invalid="true"] { border-color: var(--error-fg); }
+
+.channel-jump-error,
+.spectral-inline-error {
+  color: var(--error-fg);
+  font-size: 0.82rem;
+  margin: 0.5rem 0 0;
+}
+.channel-jump-error { width: 100%; margin: 0; }
+
+/* layout */
+
+.spectral-layout { grid-template-columns: minmax(0, 1fr) 320px; }
+
+.spectral-side {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  position: sticky;
+  top: 5.5rem;
+}
+.spectral-side .card { margin-bottom: 0; }
+.spectral-side-card h2 { font-size: 1rem; }
+
+.spectral-side-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+.spectral-side-head .section-note { margin: 0; }
+
+.channel-info-headline {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 0.5rem;
+  margin: 0.2rem 0 0.4rem;
+}
+.channel-info-number { color: var(--text-h); font-weight: 600; font-variant-numeric: tabular-nums; }
+.channel-info-number span { color: var(--text-muted); font-weight: 400; }
+.channel-info-wl { color: var(--accent-strong); font-weight: 600; font-variant-numeric: tabular-nums; }
+.channel-info-source { max-width: 12rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* image viewer */
+
+.spectral-viewer { position: relative; }
+.spectral-viewer .zoom-pan-viewport {
+  aspect-ratio: var(--mosaic-aspect, 1 / 1);
+  border-radius: 0;
+}
+.spectral-viewer .zoom-pan-controls { padding-top: 0.6rem; }
+
+.spectral-frame {
+  position: absolute;
+  inset: 0;
+  background: #000;
+  user-select: none;
+}
+
+.spectral-image {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: fill; /* box has the mosaic's exact aspect ratio */
+  cursor: crosshair;
+}
+
+.spectral-marker {
+  position: absolute;
+  width: 22px;
+  height: 22px;
+  transform: translate(-50%, -50%);
+  border: 2px solid var(--accent-strong);
+  border-radius: 50%;
+  box-shadow: 0 0 0 2px rgba(6, 10, 18, 0.85), 0 0 10px rgba(143, 208, 255, 0.6);
+  pointer-events: none;
+}
+.spectral-marker::before,
+.spectral-marker::after {
+  content: "";
+  position: absolute;
+  background: var(--accent-strong);
+}
+.spectral-marker::before { left: 50%; top: -9px; bottom: -9px; width: 1px; transform: translateX(-0.5px); opacity: 0.8; }
+.spectral-marker::after { top: 50%; left: -9px; right: -9px; height: 1px; transform: translateY(-0.5px); opacity: 0.8; }
+.spectral-marker-pending { animation: spectral-pulse 0.9s ease-in-out infinite; }
+
+@keyframes spectral-pulse {
+  50% { opacity: 0.35; }
+}
+
+.spectral-viewer-status {
+  position: absolute;
+  top: 0.7rem;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.4rem 0.8rem;
+  border-radius: 999px;
+  background: rgba(6, 10, 18, 0.88);
+  border: 1px solid var(--panel-border);
+  color: var(--text);
+  font-size: 0.8rem;
+  z-index: 2;
+  max-width: calc(100% - 1.4rem);
+}
+.spectral-viewer-status .spinner { width: 14px; height: 14px; margin: 0; }
+.spectral-viewer-error {
+  border-radius: 10px;
+  border-color: rgba(255, 90, 90, 0.4);
+  color: var(--error-fg);
+  flex-wrap: wrap;
+  justify-content: center;
+}
+.spectral-viewer-error .btn { padding: 0.3rem 0.7rem; font-size: 0.8rem; }
+
+/* RA/Dec lookup */
+
+.radec-form {
+  display: grid;
+  grid-template-columns: 1fr 1fr auto;
+  gap: 0.5rem;
+  align-items: end;
+  margin-top: 0.9rem;
+}
+.radec-form label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  font-size: 0.74rem;
+  color: var(--text-muted);
+  min-width: 0;
+}
+.radec-form input { width: 100%; }
+.radec-form .btn { padding: 0.45rem 0.75rem; }
+.radec-hint { margin: 0.5rem 0 0; font-size: 0.76rem; }
+
+/* spectrum chart */
+
+.spectral-spectrum-card { margin-top: 1.25rem; }
+.spectral-chart { margin-top: 0.75rem; }
+.spectral-chart-scroll { overflow-x: auto; }
+.spectral-chart-plot { position: relative; min-width: 560px; }
+.spectral-chart-empty { padding: 2.2rem 1.5rem; font-size: 0.9rem; }
+
+.spectral-chart-detband { fill: rgba(137, 146, 168, 0.07); }
+.spectral-chart-line { fill: none; stroke: var(--accent); stroke-width: 2; stroke-linejoin: round; stroke-linecap: round; }
+.spectral-chart-point { fill: var(--accent); }
+.spectral-chart-point-selected { fill: var(--accent-strong); stroke: var(--panel); stroke-width: 2; }
+.spectral-chart-point-hover { fill: none; stroke: var(--text-h); stroke-width: 1.5; }
+.spectral-chart-null { stroke: var(--status-uncertain-fg); stroke-width: 1.5; }
+.spectral-chart-selected-line { stroke: var(--accent-strong); stroke-width: 1; stroke-dasharray: 4 3; opacity: 0.85; }
+.spectral-chart-selected-label { fill: var(--accent-strong); font-size: 10px; font-weight: 600; }
+.spectral-chart-crosshair { stroke: var(--text-muted); stroke-width: 1; opacity: 0.6; pointer-events: none; }
+.spectral-chart-hit { cursor: pointer; }
+
+.spectral-chart-tooltip {
+  position: absolute;
+  top: 12%;
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  padding: 0.45rem 0.65rem;
+  background: rgba(6, 10, 18, 0.94);
+  border: 1px solid var(--panel-border);
+  border-radius: 7px;
+  font-size: 0.76rem;
+  color: var(--text);
+  white-space: nowrap;
+  pointer-events: none;
+  font-variant-numeric: tabular-nums;
+}
+.spectral-chart-tooltip strong { color: var(--text-h); }
+.spectral-chart-tooltip em { color: var(--text-muted); font-size: 0.7rem; }
+
+.spectral-chart-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem 1.2rem;
+  font-size: 0.76rem;
+  color: var(--text-muted);
+  margin-top: 0.5rem;
+}
+.spectral-chart-legend span { display: inline-flex; align-items: center; gap: 0.4rem; }
+.spectral-chart-legend i { display: inline-block; flex-shrink: 0; }
+.legend-line { width: 16px; height: 2px; background: var(--accent); border-radius: 1px; }
+.legend-null { width: 2px; height: 10px; background: var(--status-uncertain-fg); }
+.legend-selected { width: 0; height: 12px; border-left: 1px dashed var(--accent-strong); }
+
+.spectral-table-toggle { margin-top: 0.4rem; }
+.spectral-table-toggle summary {
+  cursor: pointer;
+  color: var(--accent);
+  font-size: 0.85rem;
+  margin-bottom: 0.6rem;
+}
+.spectral-table-toggle .table-scroll { max-height: 360px; overflow-y: auto; }
+.spectral-row-selected td { background: var(--accent-bg); }
+.unit-case { text-transform: none; } /* keep µm / MJy/sr from uppercasing to "MM" / "MJY/SR" */
+
+@media (max-width: 900px) {
+  .spectral-layout { grid-template-columns: 1fr; }
+  .spectral-side { position: static; }
+}
+
+@media (max-width: 640px) {
+  .spectral-keys { display: none; }
+  .wl-bar-labels { font-size: 0.66rem; }
+  .channel-slider { order: -1; flex-basis: 100%; }
+  .channel-step { flex: 1; justify-content: center; }
+  .channel-jump { flex-basis: 100%; }
+  .radec-form { grid-template-columns: 1fr 1fr; }
+  .radec-form .btn { grid-column: 1 / -1; justify-content: center; }
+}
