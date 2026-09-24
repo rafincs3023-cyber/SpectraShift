@@ -39,6 +39,10 @@ def get_mjd(filename):
 print("1/5 Loading candidates and epoch timing")
 
 df = pd.read_csv(INPUT_CSV)
+# an empty candidate file (no track survived the linker) has no numeric
+# dtypes to infer; make every coordinate/flux column numeric explicitly
+numeric_cols = [c for c in df.columns if c.endswith(("_ra", "_dec", "_arcsec", "_per_day")) or c.startswith("flux_")]
+df[numeric_cols] = df[numeric_cols].astype(float)
 print("Input candidates:", len(df))
 
 mjd_a = get_mjd(FILE_A)
@@ -253,7 +257,15 @@ if n > 0:
     print("Created:", OUTPUT_PNG)
 
 else:
-    print("No validated candidates to plot.")
+    # replace any previous run's figure so no stale tracks are left behind
+    fig, ax = plt.subplots(figsize=(8, 3))
+    ax.axis("off")
+    ax.text(0.5, 0.5, "No validated three-epoch candidates in this run\n"
+            "(every linked track was rejected by the stationary-source veto;\n"
+            "see rejected_three_epoch_tracks.csv)", ha="center", va="center", fontsize=11)
+    plt.savefig(OUTPUT_PNG, dpi=150)
+    plt.close(fig)
+    print("No validated candidates to plot; wrote placeholder", OUTPUT_PNG)
 
 
 print()

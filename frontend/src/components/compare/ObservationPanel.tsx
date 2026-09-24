@@ -1,4 +1,4 @@
-import type { CandidateMarker, ComparePairSide } from "../../api/types";
+import type { CandidateMarker, CompareImageSide } from "../../api/types";
 import { imageUrl } from "../../api/client";
 import { MarkerOverlay } from "./MarkerOverlay";
 
@@ -11,17 +11,21 @@ export function ObservationPanel({
   side,
   markers,
   showMarkers = true,
+  coordLabel,
 }: {
-  side: ComparePairSide;
+  side: CompareImageSide;
   markers: CandidateMarker[];
   showMarkers?: boolean;
+  /** Names what the footer RA/Dec is, e.g. "Frame center". */
+  coordLabel?: string;
 }) {
   const obs = side.observation;
+  const label = side.label ?? `Epoch ${side.epoch}`;
 
   return (
     <div className="obs-panel">
       <div className="obs-panel-header">
-        <span className="obs-epoch-chip">Epoch {side.epoch}</span>
+        <span className="obs-epoch-chip">{label}</span>
         <span className="obs-panel-meta">
           {obs?.date_obs?.slice(0, 10) ?? "—"} · MJD {fmt(obs?.mjd_obs, 3)}
         </span>
@@ -29,7 +33,7 @@ export function ObservationPanel({
       <div className="obs-image-frame">
         <img
           src={imageUrl(side.preview_url)}
-          alt={`SPHEREx sky image, Epoch ${side.epoch}`}
+          alt={`SPHEREx sky image, ${label}`}
           className="obs-image"
           draggable={false}
           crossOrigin="anonymous"
@@ -39,7 +43,7 @@ export function ObservationPanel({
       <div className="obs-panel-footer">
         <span>Detector {obs?.detector ?? "—"}</span>
         <span>
-          RA {fmt(obs?.ra_center_deg, 3)}° · Dec {fmt(obs?.dec_center_deg, 3)}°
+          {coordLabel && `${coordLabel}: `}RA {fmt(obs?.ra_center_deg, 3)}° · Dec {fmt(obs?.dec_center_deg, 3)}°
         </span>
       </div>
     </div>

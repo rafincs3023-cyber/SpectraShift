@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { Link, useSearchParams } from "react-router-dom";
 import { api, ApiError } from "../api/client";
 import type {
   CandidateMarker,
@@ -15,16 +16,14 @@ import { BlinkCompare } from "../components/compare/BlinkCompare";
 import { DifferenceView } from "../components/compare/DifferenceView";
 import { OverlayCanvas } from "../components/compare/OverlayCanvas";
 import { FieldCandidatePanel } from "../components/compare/FieldCandidatePanel";
+import { ModeTabs } from "../components/compare/ModeTabs";
+import {
+  COMPARE_MODES,
+  type CompareMode,
+} from "../components/compare/compareModes";
+import { SixMonthCompare } from "../components/compare/SixMonthCompare";
 
-type Mode = "side-by-side" | "slider" | "blink" | "difference" | "overlay";
-
-const MODES: { key: Mode; label: string }[] = [
-  { key: "side-by-side", label: "Side by Side" },
-  { key: "slider", label: "Slider" },
-  { key: "blink", label: "Blink" },
-  { key: "difference", label: "Difference" },
-  { key: "overlay", label: "Overlay" },
-];
+type Dataset = "6month" | "31day";
 
 // Real SPHEREx header note (DETECTOR keyword comment): "1-3: SWIR, 4-6: MWIR"
 function detectorLabel(detector: number | null | undefined): string {
@@ -33,7 +32,90 @@ function detectorLabel(detector: number | null | undefined): string {
   return `Detector ${detector} (${band})`;
 }
 
+/** Time Compare: the ~6-month pair is the primary/default dataset; the
+ * original A/C/B short-baseline comparison is kept as a secondary one.
+ * The selection lives in ?dataset= and ?mode= so any view can be linked. */
 export function Compare() {
+  const [searchParams, setSearchParams] = useSearchParams();
+  const dataset: Dataset =
+    searchParams.get("dataset") === "31day" ? "31day" : "6month";
+  const modeParam = searchParams.get("mode");
+  const mode: CompareMode = COMPARE_MODES.includes(modeParam as CompareMode)
+    ? (modeParam as CompareMode)
+    : "side-by-side";
+
+  function updateParams(nextDataset: Dataset, nextMode: CompareMode) {
+    const params: Record<string, string> = {};
+    if (nextDataset !== "6month") params.dataset = nextDataset;
+    if (nextMode !== "side-by-side") params.mode = nextMode;
+    setSearchParams(params, { replace: true });
+  }
+  const selectDataset = (next: Dataset) => updateParams(next, mode);
+  const setMode = (next: CompareMode) => updateParams(dataset, next);
+
+  return (
+    <div className="page compare-page">
+      <div className="page-header">
+        <h1>Time Compare</h1>
+        <p className="page-subtitle">
+          Compare real SPHEREx observations of the same sky taken at different
+          times and inspect apparent change.
+        </p>
+      </div>
+
+      <div className="view-scope-note">
+        <strong>Time Compare</strong> = changes between observation times
+        (same sky, different dates). <strong>Spectral View</strong> = changes
+        across wavelength (same sky, 102 wavelength channels) —{" "}
+        <Link to="/spectral">open Spectral View</Link>.
+      </div>
+
+      <div className="dataset-tabs" role="tablist" aria-label="Comparison dataset">
+        <button
+          type="button"
+          role="tab"
+          aria-selected={dataset === "6month"}
+          className={dataset === "6month" ? "dataset-tab dataset-tab-active" : "dataset-tab"}
+          onClick={() => selectDataset("6month")}
+        >
+          <span className="dataset-tab-title">
+            ~6-Month Compare <span className="dataset-tab-badge">Primary</span>
+          </span>
+          <span className="dataset-tab-sub">Jun 19, 2025 → Dec 17, 2025 · 181.8-day baseline</span>
+        </button>
+        <button
+          type="button"
+          role="tab"
+          aria-selected={dataset === "31day"}
+          className={dataset === "31day" ? "dataset-tab dataset-tab-active" : "dataset-tab"}
+          onClick={() => selectDataset("31day")}
+        >
+          <span className="dataset-tab-title">
+            Short-Baseline / 31-Day Compare{" "}
+            <span className="dataset-tab-badge dataset-tab-badge-muted">Secondary</span>
+          </span>
+          <span className="dataset-tab-sub">Epochs A / C / B · May 9 → Jun 9, 2025</span>
+        </button>
+      </div>
+
+      {dataset === "6month" ? (
+        <SixMonthCompare mode={mode} onModeChange={setMode} />
+      ) : (
+        <ShortBaselineCompare mode={mode} onModeChange={setMode} />
+      )}
+    </div>
+  );
+}
+
+/** The original A/C/B 31-day comparison, unchanged apart from sharing the
+ * mode selection with the ~6-month view. */
+function ShortBaselineCompare({
+  mode,
+  onModeChange,
+}: {
+  mode: CompareMode;
+  onModeChange: (mode: CompareMode) => void;
+}) {
   const [observations, setObservations] = useState<Observation[] | null>(null);
   const [candidates, setCandidates] = useState<CandidateSummary[] | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
@@ -41,7 +123,6 @@ export function Compare() {
 
   const [epochA, setEpochA] = useState<EpochLabel>("A");
   const [epochB, setEpochB] = useState<EpochLabel>("B");
-  const [mode, setMode] = useState<Mode>("side-by-side");
 
   const [pair, setPair] = useState<ComparePairResponse | null>(null);
   const [markersA, setMarkersA] = useState<CandidateMarker[]>([]);
@@ -144,30 +225,23 @@ export function Compare() {
 
   if (loading) {
     return (
-      <div className="page">
-        <LoadingState label="Loading observations…" />
-      </div>
+      <LoadingState label="Loading observations…" />
     );
   }
 
   if (loadError || !observations || !candidates) {
     return (
-      <div className="page">
-        <ErrorState message={loadError ?? "Could not load observations."} />
-      </div>
+      <ErrorState message={loadError ?? "Could not load observations."} />
     );
   }
 
   return (
-    <div className="page">
-      <div className="page-header">
-        <h1>Compare Observations</h1>
-        <p className="page-subtitle">
-          Compare real SPHEREx sky observations across epochs and inspect
-          apparent change. Live data from <code>GET /api/observations</code>{" "}
-          and <code>GET /api/compare/*</code>.
-        </p>
-      </div>
+    <>
+      <p className="section-note">
+        Compare real SPHEREx sky observations across epochs and inspect
+        apparent change. Live data from <code>GET /api/observations</code>{" "}
+        and <code>GET /api/compare/*</code>.
+      </p>
 
       <div className="compare-controls">
         <label className="control-field">
@@ -227,20 +301,7 @@ export function Compare() {
         </p>
       )}
 
-      <div className="mode-tabs" role="tablist" aria-label="Comparison mode">
-        {MODES.map((m) => (
-          <button
-            key={m.key}
-            type="button"
-            role="tab"
-            aria-selected={mode === m.key}
-            className={mode === m.key ? "mode-tab mode-tab-active" : "mode-tab"}
-            onClick={() => setMode(m.key)}
-          >
-            {m.label}
-          </button>
-        ))}
-      </div>
+      <ModeTabs mode={mode} onChange={onModeChange} />
 
       {pairLoading && <LoadingState label="Loading comparison…" />}
       {!pairLoading && pairError && <ErrorState message={pairError} />}
@@ -305,6 +366,6 @@ export function Compare() {
         Markers show preliminary, unconfirmed three-epoch motion candidates.
         Apparent change shown here is not a confirmed discovery.
       </p>
-    </div>
+    </>
   );
 }

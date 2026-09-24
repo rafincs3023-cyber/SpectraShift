@@ -13,6 +13,7 @@ status is always one of exactly: KNOWN_OBJECT, UNMATCHED_AFTER_CHECKS,
 UNCERTAIN.
 """
 
+import json
 from datetime import datetime, timezone
 from typing import Any, Optional
 
@@ -21,6 +22,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 
 from data_access import (
+    BASE_DIR,
     VALID_CATALOGUE_STATUSES,
     clean_record,
     df_records,
@@ -29,6 +31,7 @@ from data_access import (
 import images
 import spectrum
 from spectral_api import router as spectral_router
+from time_compare_6month import router as six_month_router
 
 app = FastAPI(
     title="SpectraShift API",
@@ -54,6 +57,11 @@ app.add_middleware(
 # Spectral View (102-channel SPHEREx mosaic cubes) -- separate from the
 # A/C/B Time Compare routes below; see spectral_api.py.
 app.include_router(spectral_router)
+
+# ~6-month Time Compare pair (Jun 19 vs Dec 17 2025) -- separate from, and
+# the default alongside, the A/C/B 31-day routes below; see
+# time_compare_6month.py.
+app.include_router(six_month_router)
 
 
 def _candidate_summary_records() -> list[dict[str, Any]]:
@@ -82,6 +90,8 @@ def _candidate_summary_records() -> list[dict[str, Any]]:
         summary_cols.append("final_catalogue_status")
         summary_cols.append("best_match_catalogue")
         summary_cols.append("best_match_separation_arcsec")
+        # v3 classification (catalogue_crossmatch_v3.py); absent in older files
+        summary_cols += ["catalogue_explanation", "match_confidence", "status_reason"]
 
     available_cols = [c for c in summary_cols if c in base_df.columns]
     merged = base_df[available_cols].copy()
@@ -168,10 +178,46 @@ def _candidate_detail(candidate_id: str) -> Optional[dict[str, Any]]:
                 else []
             ),
             "notes": g("catalogue_notes"),
+            # v3 epoch-propagated, uncertainty-aware classification
+            "explanation": g("catalogue_explanation"),
+            "match_confidence": g("match_confidence"),
+            "status_reason": g("status_reason"),
+            "catalogues_checked": _split(g("catalogues_checked")),
+            "optional_services_unavailable": _split(g("optional_services_unavailable")),
+            "joint_p_chance": g("joint_p_chance"),
+            "observed_motion": {
+                "rate_arcsec_per_day": g("observed_rate_arcsec_per_day"),
+                "position_angle_deg": g("observed_pa_deg"),
+            },
+            "expected_motion": {
+                "rate_arcsec_per_day": g("expected_rate_arcsec_per_day"),
+                "position_angle_deg": g("expected_pa_deg"),
+                "source": g("expected_motion_source"),
+            },
+            "per_epoch": [
+                {
+                    "epoch": epoch,
+                    "match_object": g(f"{epoch}_match_object"),
+                    "separation_arcsec": g(f"{epoch}_separation_arcsec"),
+                    "chi2": g(f"{epoch}_chi2"),
+                    "sigma_total_arcsec": g(f"{epoch}_sigma_total_arcsec"),
+                    "expected_ra_deg": g(f"{epoch}_expected_ra"),
+                    "expected_dec_deg": g(f"{epoch}_expected_dec"),
+                    "p_chance": g(f"{epoch}_p_chance"),
+                    "n_consistent": g(f"{epoch}_n_consistent"),
+                    "mag_residual": g(f"{epoch}_mag_residual"),
+                    "persistence_snr": g(f"{epoch}_persist_snr_other_epochs"),
+                }
+                for epoch in ("A", "C", "B")
+            ],
         },
         "ranking_reason": (ranked_row or {}).get("reason"),
     }
     return clean_record_deep(detail)
+
+
+def _split(value: Any) -> list[str]:
+    return value.split(";") if isinstance(value, str) and value else []
 
 
 def clean_record_deep(obj: Any) -> Any:
@@ -236,6 +282,40 @@ def observations() -> dict[str, Any]:
     }
 
 
+LINKING_CALIBRATION_JSON = BASE_DIR / "three_epoch_linking_calibration.json"
+REJECTED_TRACKS_CSV = BASE_DIR / "rejected_three_epoch_tracks.csv"
+
+
+@app.get("/api/linking-summary")
+def linking_summary() -> dict[str, Any]:
+    """Outcome of the latest three_epoch_compare.py run: how many A->C->B
+    tracks were formed, how many were accepted as candidates, and how many
+    the stationary-source veto rejected, by reason. Read from the linker's
+    own outputs, so it always matches the current candidate list."""
+
+    if not LINKING_CALIBRATION_JSON.is_file():
+        raise HTTPException(status_code=404, detail="three_epoch_linking_calibration.json not found")
+    calib = json.loads(LINKING_CALIBRATION_JSON.read_text(encoding="utf-8"))
+    tracks = calib.get("tracks", {})
+    rejected = tracks.get("rejected", {})
+    fv = calib.get("false_veto_rate", {})
+    return clean_record_deep({
+        "accepted_tracks": tracks.get("accepted"),
+        "rejected_tracks": sum(rejected.values()),
+        "rejected_by_reason": rejected,
+        "rejected_tracks_file": REJECTED_TRACKS_CSV.name if REJECTED_TRACKS_CSV.is_file() else None,
+        "genuine_mover_veto_probability": fv.get("genuine_mover_track_vetoed_probability"),
+        "detection_sigma": calib.get("detection_sigma"),
+        "source_counts": calib.get("source_counts"),
+        "note": (
+            "A track is rejected when its detections are the same stationary source at the "
+            "same sky position in other epochs (STATIONARY_SOURCE), are built around persistent "
+            "sources or bright-star halos (BLEND_MISLINK), or do not follow a constant-velocity "
+            "path within the astrometric uncertainty (INCONSISTENT_TRAJECTORY)."
+        ),
+    })
+
+
 @app.get("/api/candidates")
 def candidates() -> dict[str, Any]:
     """Summary list of all validated three-epoch motion candidates."""
@@ -290,6 +370,9 @@ def catalogue_crossmatch(candidate_id: str) -> dict[str, Any]:
             "services_succeeded": (summary_row or {}).get("services_succeeded"),
             "services_failed": (summary_row or {}).get("services_failed"),
             "notes": (summary_row or {}).get("catalogue_notes"),
+            "explanation": (summary_row or {}).get("catalogue_explanation"),
+            "match_confidence": (summary_row or {}).get("match_confidence"),
+            "status_reason": (summary_row or {}).get("status_reason"),
         } if summary_row else None,
     }
 

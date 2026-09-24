@@ -1,5 +1,5 @@
 import { useRef, useState } from "react";
-import type { CandidateMarker, ComparePairSide } from "../../api/types";
+import type { CandidateMarker, CompareImageSide } from "../../api/types";
 import { imageUrl } from "../../api/client";
 import { MarkerOverlay } from "./MarkerOverlay";
 
@@ -9,11 +9,13 @@ export function SliderCompare({
   markersA,
   markersB,
 }: {
-  epochA: ComparePairSide;
-  epochB: ComparePairSide;
+  epochA: CompareImageSide;
+  epochB: CompareImageSide;
   markersA: CandidateMarker[];
   markersB: CandidateMarker[];
 }) {
+  const labelA = epochA.label ?? `Epoch ${epochA.epoch}`;
+  const labelB = epochB.label ?? `Epoch ${epochB.epoch}`;
   const [position, setPosition] = useState(50); // percent, 0 = all A, 100 = all B
   const containerRef = useRef<HTMLDivElement>(null);
   const dragging = useRef(false);
@@ -45,7 +47,7 @@ export function SliderCompare({
       >
         <img
           src={imageUrl(epochA.preview_url)}
-          alt={`Epoch ${epochA.epoch}`}
+          alt={labelA}
           className="obs-image slider-base"
           draggable={false}
           crossOrigin="anonymous"
@@ -56,7 +58,7 @@ export function SliderCompare({
         >
           <img
             src={imageUrl(epochB.preview_url)}
-            alt={`Epoch ${epochB.epoch}`}
+            alt={labelB}
             className="obs-image slider-base"
             draggable={false}
             crossOrigin="anonymous"
@@ -68,10 +70,10 @@ export function SliderCompare({
         </div>
 
         <span className="slider-side-label slider-side-left">
-          Epoch {epochA.epoch}
+          {labelA}
         </span>
         <span className="slider-side-label slider-side-right">
-          Epoch {epochB.epoch}
+          {labelB}
         </span>
 
         <MarkerOverlay markers={position < 50 ? markersB : markersA} />
@@ -84,7 +86,7 @@ export function SliderCompare({
         value={position}
         onChange={(e) => setPosition(Number(e.target.value))}
         className="slider-range-input"
-        aria-label="Slide between Epoch A and Epoch B"
+        aria-label={`Slide between ${labelA} and ${labelB}`}
       />
     </div>
   );

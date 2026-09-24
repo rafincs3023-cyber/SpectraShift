@@ -1,5 +1,6 @@
 """
-Read-only data access layer for the SPHEREx Planet X candidate API.
+Read-only data access layer for the SpectraShift candidate API (NASA Space
+Apps "Planet X and SPHEREx" challenge context).
 
 This module ONLY reads already-completed scientific pipeline outputs
 (CSV files) and FITS headers from the project root. It never re-runs

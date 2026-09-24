@@ -548,6 +548,118 @@ code {
   min-width: 0;
 }
 
+/* time compare: dataset switch + ~6-month view */
+
+.view-scope-note {
+  background: var(--accent-bg);
+  border: 1px solid rgba(94, 184, 255, 0.3);
+  border-radius: 8px;
+  padding: 0.65rem 1rem;
+  font-size: 0.86rem;
+  margin-bottom: 1rem;
+}
+.view-scope-note strong { color: var(--text-h); }
+
+.dataset-tabs {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 0.6rem;
+  margin-bottom: 1rem;
+}
+
+.dataset-tab {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.2rem;
+  text-align: left;
+  background: var(--panel);
+  border: 1px solid var(--panel-border);
+  border-radius: 10px;
+  padding: 0.7rem 0.95rem;
+  color: var(--text-muted);
+  cursor: pointer;
+  font: inherit;
+}
+.dataset-tab:hover { border-color: var(--accent); }
+.dataset-tab-active {
+  border-color: var(--accent);
+  background: var(--accent-bg);
+}
+.dataset-tab-title { color: var(--text-h); font-weight: 600; font-size: 0.95rem; }
+.dataset-tab-sub { font-size: 0.8rem; }
+.dataset-tab-badge {
+  margin-left: 0.35rem;
+  font-size: 0.68rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  padding: 0.1rem 0.45rem;
+  border-radius: 999px;
+  background: var(--status-known-bg);
+  color: var(--status-known-fg);
+  vertical-align: middle;
+}
+.dataset-tab-badge-muted {
+  background: var(--status-unmatched-bg);
+  color: var(--status-unmatched-fg);
+}
+
+.time-compare-summary {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem 1.25rem;
+  font-size: 0.88rem;
+  color: var(--text-muted);
+  margin-bottom: 1rem;
+}
+.time-compare-summary strong { color: var(--text-h); }
+
+/* Compare uses much more of a wide viewport than the 1200px default: the
+   image comparison is the priority. Header widens with it to stay aligned. */
+.app-main:has(.compare-page) {
+  max-width: 1840px;
+  padding-inline: clamp(1rem, 3vw, 2.5rem);
+}
+.app-shell:has(.compare-page) .app-header-inner {
+  max-width: 1840px;
+  padding-inline: clamp(1rem, 3vw, 2.5rem);
+}
+
+.compare-layout-wide { grid-template-columns: minmax(0, 1fr) 320px; }
+@media (max-width: 1100px) {
+  .compare-layout-wide { grid-template-columns: 1fr; }
+}
+
+/* frames follow the displayed region's aspect ratio instead of a square */
+.compare-viewer-wide .obs-image-frame { aspect-ratio: var(--frame-aspect, 1 / 1); }
+.compare-viewer-wide .side-by-side-grid { grid-template-columns: 1fr; }
+.compare-viewer-wide > .section-note { margin: 0.75rem 0 0; }
+
+.time-compare-info h2 { font-size: 1rem; margin: 0 0 0.5rem; }
+.time-compare-info dd { font-variant-numeric: tabular-nums; }
+.time-compare-info code { font-size: 0.72rem; word-break: break-all; }
+
+.difference-caption p { margin: 0 0 0.5rem; }
+.difference-convention {
+  color: var(--text-h);
+  font-size: 0.92rem;
+  background: var(--panel);
+  border: 1px solid var(--panel-border);
+  border-left: 3px solid var(--accent);
+  border-radius: 6px;
+  padding: 0.55rem 0.8rem;
+}
+.swatch {
+  display: inline-block;
+  width: 0.7rem;
+  height: 0.7rem;
+  border-radius: 2px;
+  vertical-align: -0.05rem;
+}
+.swatch-pos { background: rgb(255, 0, 0); }
+.swatch-neg { background: rgb(0, 0, 255); }
+
 /* observation panel */
 
 .side-by-side-grid {
@@ -1407,3 +1519,30 @@ a.spectral-mode:hover { border-color: var(--accent); }
   .radec-form { grid-template-columns: 1fr 1fr; }
   .radec-form .btn { grid-column: 1 / -1; justify-content: center; }
 }
+
+/* catalogue status explanations (Candidates table + detail) */
+.info-hint {
+  cursor: help;
+  color: var(--accent);
+  font-size: 0.85em;
+}
+.confidence-note {
+  display: block;
+  margin-top: 0.2rem;
+  font-size: 0.72rem;
+  color: var(--text-muted);
+}
+.catalogue-status-row .confidence-note {
+  display: inline;
+  margin-left: 0.5rem;
+}
+.status-reason { margin: 0 0 0.75rem; }
+.status-legend {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 0.75rem;
+  margin: 1rem 0 0.5rem;
+  font-size: 0.82rem;
+}
+.status-legend dt { color: var(--text-h); font-weight: 600; margin-bottom: 0.15rem; }
+.status-legend dd { margin: 0; color: var(--text-muted); }

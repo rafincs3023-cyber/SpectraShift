@@ -21,6 +21,13 @@ env/
 backend/preview_cache/
 backend/cutout_cache/
 
+# Multi-GB SPHEREx 102-band mosaic cube (real data, but far too large for
+# Git; regenerable from the IRSA Mosaic Tool job). Metadata/JSON stays
+# tracked; only the big binary FITS/compressed products are excluded.
+data/spherex_102/*.fits
+data/spherex_102/*.fits.gz
+data/spherex_102/download*.log
+
 # --- Node / frontend ---
 node_modules/
 dist/
@@ -41,3 +48,12 @@ data/spherex/*.fits
 data/spherex/*.fits.gz
 # Derived Spectral View access cache (rebuild with backend/build_spectral_cache.py)
 data/spherex/cache/
+
+# Additional raw SPHEREx Level-2 frames used to choose the ~6-month pair
+# (~72 MB each, re-downloadable from IRSA). The three 31-day A/C/B frames
+# are already tracked; the verified ~6-month products live in
+# data/time_compare_6month/.
+level2_*.fits
+
+# Injection-recovery test outputs (regenerate with test_linker_injection.py)
+data/injection_test/

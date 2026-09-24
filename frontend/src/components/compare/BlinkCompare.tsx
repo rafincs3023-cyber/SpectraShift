@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import type { CandidateMarker, ComparePairSide } from "../../api/types";
+import type { CandidateMarker, CompareImageSide } from "../../api/types";
 import { imageUrl } from "../../api/client";
 import { MarkerOverlay } from "./MarkerOverlay";
 
@@ -15,8 +15,8 @@ export function BlinkCompare({
   markersA,
   markersB,
 }: {
-  epochA: ComparePairSide;
-  epochB: ComparePairSide;
+  epochA: CompareImageSide;
+  epochB: CompareImageSide;
   markersA: CandidateMarker[];
   markersB: CandidateMarker[];
 }) {
@@ -31,6 +31,7 @@ export function BlinkCompare({
   }, [playing, intervalMs]);
 
   const active = showingA ? epochA : epochB;
+  const activeLabel = active.label ?? `Epoch ${active.epoch}`;
   const activeMarkers = showingA ? markersA : markersB;
 
   return (
@@ -38,13 +39,13 @@ export function BlinkCompare({
       <div className="obs-image-frame">
         <img
           src={imageUrl(active.preview_url)}
-          alt={`Epoch ${active.epoch}`}
+          alt={activeLabel}
           className="obs-image"
           draggable={false}
           crossOrigin="anonymous"
         />
         <MarkerOverlay markers={activeMarkers} />
-        <span className="blink-epoch-chip">Epoch {active.epoch}</span>
+        <span className="blink-epoch-chip">{activeLabel}</span>
       </div>
 
       <div className="blink-controls">

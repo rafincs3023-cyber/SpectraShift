@@ -1,4 +1,4 @@
-import { NavLink, Outlet } from "react-router-dom";
+import { NavLink, Outlet, useLocation } from "react-router-dom";
 
 const NAV_LINKS = [
   { to: "/", label: "Home", end: true },
@@ -11,6 +11,11 @@ const NAV_LINKS = [
 ];
 
 export function Layout() {
+  // Candidates pages (list and detail) get their own footer so an empty list
+  // is not read as "no moving sources"; every other page keeps the site-wide
+  // text.
+  const { pathname } = useLocation();
+
   return (
     <div className="app-shell">
       <header className="app-header">
@@ -44,10 +49,18 @@ export function Layout() {
       </main>
 
       <footer className="app-footer">
-        <p>
-          Preliminary, unconfirmed three-epoch motion candidates from SPHEREx
-          data. Nothing shown here is a confirmed discovery.
-        </p>
+        {pathname === "/candidates" || pathname.startsWith("/candidates/") ? (
+          <p>
+            Candidate results are preliminary pipeline outputs. An empty
+            candidate list does not imply that no moving sources exist in the
+            field.
+          </p>
+        ) : (
+          <p>
+            SpectraShift shows real SPHEREx data and preliminary analysis
+            results. Nothing shown here is a confirmed discovery.
+          </p>
+        )}
       </footer>
     </div>
   );

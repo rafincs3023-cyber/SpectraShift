@@ -7,13 +7,19 @@ import type {
   CrossmatchResponse,
   EpochLabel,
   HealthResponse,
+  LinkingSummary,
   ObservationsResponse,
+  SixMonthCompareResponse,
 } from "./types";
 
 // Backend URL is environment-based (see .env / .env.example) so the same
 // build can point at a different backend without code changes.
+// Without VITE_API_BASE_URL, development talks to the local backend and a
+// production build uses same-origin "/api/..." paths (backend or reverse
+// proxy on the same host), so no localhost URL ever ships in a public build.
 export const API_BASE_URL: string =
-  import.meta.env.VITE_API_BASE_URL ?? "http://127.0.0.1:8000";
+  import.meta.env.VITE_API_BASE_URL ??
+  (import.meta.env.DEV ? "http://127.0.0.1:8000" : "");
 
 export class ApiError extends Error {
   status: number;
@@ -57,6 +63,7 @@ export const api = {
   getHealth: () => request<HealthResponse>("/api/health"),
   getObservations: () => request<ObservationsResponse>("/api/observations"),
   getCandidates: () => request<CandidatesResponse>("/api/candidates"),
+  getLinkingSummary: () => request<LinkingSummary>("/api/linking-summary"),
   getCandidate: (candidateId: string) =>
     request<CandidateDetail>(
       `/api/candidates/${encodeURIComponent(candidateId)}`
@@ -69,6 +76,8 @@ export const api = {
     request<ComparePairResponse>(
       `/api/compare/pair?epoch_a=${epochA}&epoch_b=${epochB}`
     ),
+  getSixMonthCompare: () =>
+    request<SixMonthCompareResponse>("/api/compare/6month"),
   getCandidateMarkers: (epochKey: string) =>
     request<CandidateMarkersResponse>(
       `/api/compare/candidate-markers?epoch=${encodeURIComponent(epochKey)}`

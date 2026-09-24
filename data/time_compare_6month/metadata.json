@@ -1,0 +1,29 @@
+{
+  "target": {
+    "ra_deg": 155.352,
+    "dec_deg": -42.7
+  },
+  "epoch_A": {
+    "date": "2025-06-19T00:00:58.754",
+    "file": "level2_2025W25_1B_0652_1D3_spx_l2b-v20-2025-253.fits",
+    "wavelength_um": 1.6848855731095453
+  },
+  "epoch_B": {
+    "date": "2025-12-17T18:35:43.129",
+    "file": "level2_2025W51_1A_0594_2D3_spx_l2b-v21-2025-354.fits",
+    "wavelength_um": 1.6816769850019317
+  },
+  "time_gap_days": 181.77412471100251,
+  "wavelength_delta_um": 0.003208588107613597,
+  "delta_over_bandwidth": 0.079862449795658,
+  "difference_primary": "B-A",
+  "difference_meaning": "positive values mean brighter in the later epoch",
+  "crop": {
+    "x0": 0,
+    "x1": 1057,
+    "y0": 1572,
+    "y1": 2040,
+    "width": 1057,
+    "height": 468
+  }
+}

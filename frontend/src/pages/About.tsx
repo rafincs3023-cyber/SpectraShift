@@ -44,20 +44,29 @@ export function About() {
           validates that motion scientifically (trajectory consistency,
           motion-rate consistency, flux consistency, and epoch-C position
           prediction error), and cross-matches each candidate against Gaia
-          DR3, SIMBAD, and available Solar System object catalogues.
+          DR3, SIMBAD, and available Solar System object catalogues. Before
+          any track is accepted, a stationary-source veto rejects tracks
+          built from sources that stay at the same sky position in the other
+          epochs, and blend / bright-star-halo mislinks. In the current run
+          every linked track was rejected by these checks, so the candidate
+          list is empty — which does not mean that no moving sources exist
+          in the field.
         </p>
       </div>
 
       <div className="card">
         <h2>Scientific Limitations</h2>
         <p>
-          A full MPC/SkyBoT minor-planet catalogue verification was not
-          completed for these candidates, and the JPL Horizons check that
-          was used only covers a limited set of major/bright bodies, not
-          the full minor-planet catalogue. Because of this,{" "}
-          <code>UNMATCHED_AFTER_CHECKS</code> and <code>UNCERTAIN</code>{" "}
-          only describe the checks actually performed — they do not mean
-          "unknown" or "a new planet."
+          Catalogue classification propagates Gaia DR3 and SIMBAD positions
+          to each SPHEREx observation epoch with their catalogued proper
+          motions and tests every association against the combined SPHEREx +
+          catalogue positional uncertainty. The known asteroid and comet
+          search uses the JPL Small-Body Identification service, with
+          positions computed from the SPHEREx spacecraft itself; SkyBoT and
+          the MPC Checker were unreachable and are not relied on. The
+          statuses describe only these checks —{" "}
+          <code>UNMATCHED_AFTER_CHECKS</code> and <code>UNCERTAIN</code> do
+          not mean "unknown" or "a new planet."
         </p>
       </div>
 
@@ -69,8 +78,8 @@ export function About() {
           object. Catalogue status only ever reflects one of three
           outcomes: a match found in the checks actually performed
           (<code>KNOWN_OBJECT</code>), no match in the checks actually
-          performed (<code>UNMATCHED_AFTER_CHECKS</code>), or an important
-          check that could not be completed (<code>UNCERTAIN</code>).
+          performed (<code>UNMATCHED_AFTER_CHECKS</code>), or evidence that
+          is incomplete, ambiguous or inconsistent (<code>UNCERTAIN</code>).
         </p>
       </div>
     </div>

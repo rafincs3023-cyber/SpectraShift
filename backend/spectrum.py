@@ -6,7 +6,7 @@ across the detector's pixel grid (see the WCS-WAVE table in each FITS
 file), so a single exposure does NOT contain a continuous spectrum for a
 fixed sky position -- it samples that position at whatever single
 wavelength corresponds to the pixel the source happened to fall on in
-that exposure. Because our 22 candidates moved across the detector between
+that exposure. Because candidates move across the detector between
 epochs A, C and B, each epoch's detection sampled the source at a
 DIFFERENT wavelength. This module reads that real, already-computed
 per-epoch position + flux (from validated_candidates_with_catalogue.csv)

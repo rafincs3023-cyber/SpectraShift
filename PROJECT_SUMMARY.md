@@ -16,15 +16,14 @@
 **Pipeline steps (in order run):**
 1. `process_spherex.py` — WCS alignment of B onto A's pixel grid (reproject_interp), A−B difference image
 2. `detect_candidates.py` — significance-based change detection
-3. `three_epoch_compare.py` — full source detection (DAOStarFinder) on all 3 epochs, A→C→B motion matching → **23 preliminary candidates**
-   - Fixed a real bug: `unhashable type: numpy.ndarray` from astropy's scalar `match_to_catalog_sky` returning 0-d arrays; also updated deprecated photutils `xcentroid`→`x_centroid`
-4. `validate_candidates.py` — scientific validation (trajectory consistency, rate consistency, C-prediction error, flux consistency) → **22 validated candidates** (1 rejected: 3EPOCH-010, inconsistent trajectory)
-   - Output: `validated_three_epoch_candidates.csv`, `top_candidate_tracks.png`
-5. **Catalogue cross-match** (`catalogue_crossmatch_v2.py`) — Gaia DR3 + SIMBAD (both reachable) + SkyBoT/MPC (both **unreachable** from this network, confirmed repeatedly) + JPL Horizons (19 major/bright bodies only, not full minor-planet catalogue)
-   - Found & fixed a real bug: mistakenly treated "matched *some* star each epoch" as "matched the *same* object" — fixed to require same object recurring
-   - Result: **all 22 candidates → UNCERTAIN** (comprehensive SSO check impossible; field is at ecliptic latitude −48.7°, far from where minor planets are typically found)
-   - Output: `catalogue_crossmatch_results.csv` (330-row audit trail), `validated_candidates_with_catalogue.csv`
-6. `final_ranking.py` — combined priority score (70% validation + 20% catalogue confidence + 10% SSO check) → `final_ranked_candidates.csv`
+3. `three_epoch_compare.py` — source detection (DAOStarFinder, 7σ) on all 3 epochs, A→C→B linking, **stationary-source veto**
+   - Earlier version: linked the full source lists with no stationarity test → 23 "candidates", every one of which later proved to be linked stationary stars (a different Gaia star at each epoch). Two causes: (1) nothing required a track's detections to be absent from the other epochs; (2) DAOStarFinder's default sharpness cut (≤ 1.0) drops about half of SPHEREx's undersampled point sources depending on sub-pixel phase, so a stationary star vanished from some epochs' lists and looked "unmatched".
+   - Current version: shape limits relaxed and SPHEREx-flagged pixels masked; astrometric model calibrated from ~75k stationary source pairs (centroid σ 0.48–0.58″, registration σ 0.08–0.11″); every linked track is tested in sky coordinates and rejected as `STATIONARY_SOURCE`, `BLEND_MISLINK` or `INCONSISTENT_TRAJECTORY` (log: `rejected_three_epoch_tracks.csv`; model: `three_epoch_linking_calibration.json`; classified sources: `three_epoch_detections.csv`)
+   - Result: 725 tracks formed → **0 accepted** (673 stationary source, 52 blend/mislink). Measured false-veto probability for a genuine mover ≈ 10%; injection–recovery (`test_linker_injection.py`) recovers ~43% of injected movers end to end (5% with the old detection settings), limited by detection completeness, not the veto.
+   - Previous outputs kept for comparison in `data/pipeline_v1_backup/` (incl. `old_candidates_new_outcome.csv`, the fate of each old track)
+4. `validate_candidates.py` — trajectory/rate/C-prediction/flux validation → `validated_three_epoch_candidates.csv`, `top_candidate_tracks.png` (currently 0 candidates; placeholder figure)
+5. **Catalogue classification** (`catalogue_crossmatch_v3.py`) — Gaia DR3 propagated to each epoch with proper motion, uncertainty-aware (χ²) matching, chance-coincidence probability, flux-vs-G check, SIMBAD, full known-asteroid/comet search via JPL sb_ident + Horizons from the SPHEREx spacecraft, forced-photometry persistence → `KNOWN_OBJECT` / `UNMATCHED_AFTER_CHECKS` / `UNCERTAIN` with a reason per candidate (currently 0 candidates to classify)
+6. `final_ranking.py` — 70% validation + 20% catalogue status + 10% Solar System check → `final_ranked_candidates.csv` (notes regenerated from current values)
 
 **Scientific integrity rule enforced throughout:** never invent data; every "null" is a real "could not determine," never a guess. No candidate is ever called "Planet X," "discovery," or "confirmed."
 
@@ -42,7 +41,8 @@ Read-only API over the completed science outputs — never reruns detection/vali
 |---|---|
 | `GET /api/health` | data/file availability check |
 | `GET /api/observations` | 3 epochs' metadata (MJD, WCS center, detector) |
-| `GET /api/candidates` | all 22 candidates, ranked |
+| `GET /api/candidates` | current validated candidates, ranked (0 after the stationary-source veto) |
+| `GET /api/linking-summary` | latest linker run: tracks formed / accepted / rejected by reason |
 | `GET /api/candidates/{id}` | full candidate detail |
 | `GET /api/catalogue-crossmatch/{id}` | full 15-row audit trail per candidate |
 | `GET /api/candidates/{id}/spectrum` | real per-epoch (wavelength, flux, uncertainty) from FITS WCS-WAVE + VARIANCE |
@@ -63,10 +63,11 @@ python -m uvicorn main:app --host 127.0.0.1 --port 8000
 
 **Pages (all real, live data — zero mock data anywhere):**
 - **Home** — hero + feature cards
-- **Candidates** — full ranked list (final priority rank), live from API
+- **Candidates** — ranked list live from the API, with the linker summary (tracks formed / rejected by reason) and an explained empty state (currently 0 candidates)
 - **Candidate Detail** — ranking, positions, motion, validation scores, catalogue cross-match table, **+ Visual Evidence section**: real per-epoch cutouts, A→C→B motion-track SVG, flux-vs-wavelength spectrum chart, brightness-vs-time light curve, "Inspect in Explore" / "Open in Compare" links
 - **Explore** — zoom/pan sky viewer, epoch/band selector (only real band: Detector 3 SWIR), clickable candidate markers → RA/Dec, spectrum, catalogue match, motion
-- **Compare** — 5 modes: **Side-by-Side, Slider, Blink, Difference (A−B only), Overlay** (red/cyan composite); honest alignment-caveat banner for non-A/B pairs
+- **Compare (Time Compare)** — primary **~6-Month Compare** (2025-06-19 → 2025-12-17, 181.77 days, registered 1016 × 346 px common frame, difference B − A) and secondary **31-Day A/C/B Compare** (difference A − B for the registered A/B pair); 5 modes: **Side-by-Side, Slider, Blink, Difference, Overlay**
+- **Spectral View** — all 102 SPHEREx channels (0.743–5.009 µm, D1–D6), per-channel metadata incl. measured sky coverage, click-to-spectrum and RA/Dec lookup
 - **About** — Challenge Goal, How SpectraShift Works, Data & Provenance (SPHEREx QR2, DOI 10.26131/IRSA652, via IRSA/AWS), Scientific Limitations, "what this is/is not"
 - **Help** — full usage glossary for every feature above
 
@@ -94,4 +95,4 @@ Renamed **DeltaScope → SpectraShift** everywhere (nav, titles, About page, REA
 
 ---
 
-**Current status:** both servers were stopped by the system (low memory, idle) — code is untouched, just needs restarting when ready to demo.
+**Documentation:** `README.md`, `docs/ARCHITECTURE.md`, `docs/DEPLOYMENT.md`, `docs/DEMO_FLOW.md`, `docs/PROJECT_DESCRIPTIONS.md`, `docs/PRESENTATION.md`, `docs/NASA_SUBMISSION.md`.

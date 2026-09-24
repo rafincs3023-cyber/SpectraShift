@@ -552,6 +552,20 @@ class SpectralService:
                     self._channels = cached["channels"]
         return self._channels
 
+    def _preview_finite_fraction(self, channel: int) -> Optional[float]:
+        """Finite-pixel fraction recorded when this channel's preview was
+        rendered (render_preview: finite pixels / all pixels of the
+        full-resolution plane -- the same quantity build_spectral_cache.py
+        stores). None if no preview of the channel has been rendered yet."""
+        for info_path in sorted((self.cache_dir / PREVIEW_SUBDIR).glob(f"ch{channel:03d}_*.json")):
+            try:
+                value = json.loads(info_path.read_text()).get("finite_fraction")
+            except (OSError, ValueError):
+                continue
+            if value is not None:
+                return float(value)
+        return None
+
     def channel_stats(self) -> dict[str, Any]:
         path = self.cache_dir / STATS_FILENAME
         try:
@@ -615,9 +629,12 @@ class SpectralService:
         chan_out = []
         for ch in channels:
             s = stats.get(str(ch["channel"]), {})
+            coverage = s.get("finite_fraction")
+            if coverage is None:
+                coverage = self._preview_finite_fraction(ch["channel"])
             chan_out.append({
                 **ch,
-                "coverage_fraction": s.get("finite_fraction"),
+                "coverage_fraction": coverage,
                 "preview_url": f"/api/spectral/channels/{ch['channel']}/preview",
             })
 

@@ -241,7 +241,10 @@ export function SpectralView() {
         </div>
         <Link to="/compare" className="spectral-mode">
           <strong>Time Compare →</strong>
-          <span>Same sky observed on different dates (Epochs A, C, B).</span>
+          <span>
+            Same sky observed at different times. Primary: ~6-month
+            comparison; secondary: 31-day A/C/B comparison.
+          </span>
         </Link>
       </div>
 

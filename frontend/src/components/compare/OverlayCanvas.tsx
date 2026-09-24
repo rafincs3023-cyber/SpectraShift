@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import type { CandidateMarker, ComparePairSide } from "../../api/types";
+import type { CandidateMarker, CompareImageSide } from "../../api/types";
 import { imageUrl } from "../../api/client";
 import { MarkerOverlay } from "./MarkerOverlay";
 
@@ -42,8 +42,8 @@ export function OverlayCanvas({
   epochB,
   markers,
 }: {
-  epochA: ComparePairSide;
-  epochB: ComparePairSide;
+  epochA: CompareImageSide;
+  epochB: CompareImageSide;
   markers: CandidateMarker[];
 }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -108,8 +108,8 @@ export function OverlayCanvas({
         {error && <div className="overlay-loading overlay-error">{error}</div>}
       </div>
       <p className="section-note">
-        Overlay visualization: Epoch {epochA.epoch} in red, Epoch{" "}
-        {epochB.epoch} in cyan. Unchanged sources appear pale/white; a
+        Overlay visualization: {epochA.label ?? `Epoch ${epochA.epoch}`} in
+        red, {epochB.label ?? `Epoch ${epochB.epoch}`} in cyan. Unchanged sources appear pale/white; a
         red-only or cyan-only point indicates apparent brightness or
         position change between the two epochs. This is a visual
         observation-comparison rendering, not a new derived scientific

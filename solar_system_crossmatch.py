@@ -1,5 +1,6 @@
 """
-Known Solar System object cross-match for the 22 validated candidates.
+Known Solar System object cross-match for the validated candidates (legacy;
+superseded by catalogue_crossmatch_v3.py).
 
 Does NOT repeat the Gaia DR3 / SIMBAD checks already stored in
 catalogue_crossmatch_results.csv -- this script only adds the missing

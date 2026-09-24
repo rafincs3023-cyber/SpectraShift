@@ -39,15 +39,24 @@ ALIGNED_B_FITS = BASE_DIR / "observation_B_aligned.fits"
 DIFFERENCE_FITS = BASE_DIR / "difference_A_minus_B.fits"
 
 
-def _stretch_to_uint8(data: np.ndarray, plo: float = 0.5, phi: float = 99.5) -> np.ndarray:
+def _stretch_to_uint8(
+    data: np.ndarray,
+    plo: float = 0.5,
+    phi: float = 99.5,
+    lo: Optional[float] = None,
+    hi: Optional[float] = None,
+) -> np.ndarray:
     """Standard astronomical asinh (Lupton et al. 2004-style) stretch: keeps
     bright stars from saturating the display while making faint,
     real (e.g. threshold-level) detections visible -- a display choice
-    only, the underlying pixel values are untouched."""
+    only, the underlying pixel values are untouched. Pass lo/hi to share
+    one fixed display range across several images instead of per-image
+    percentiles."""
     finite = np.isfinite(data)
     if not finite.any():
         return np.zeros(data.shape, dtype=np.uint8)
-    lo, hi = np.nanpercentile(data[finite], [plo, phi])
+    if lo is None or hi is None:
+        lo, hi = np.nanpercentile(data[finite], [plo, phi])
     if hi <= lo:
         hi = lo + 1.0
     clipped = np.clip(data, lo, None)
@@ -82,8 +91,11 @@ def _save_grayscale(data: np.ndarray, out_path: Path) -> None:
     img.save(out_path, format="PNG", optimize=True)
 
 
-def _save_diverging(data: np.ndarray, out_path: Path) -> None:
-    """Diverging red/blue render for a difference image, symmetric about 0."""
+def _save_diverging(
+    data: np.ndarray, out_path: Path, max_size: Optional[int] = MAX_PREVIEW_SIZE
+) -> None:
+    """Diverging red/blue render for a difference image, symmetric about 0.
+    max_size=None keeps native resolution."""
     finite = np.isfinite(data)
     if finite.any():
         limit = float(np.nanpercentile(np.abs(data[finite]), 99))
@@ -105,7 +117,8 @@ def _save_diverging(data: np.ndarray, out_path: Path) -> None:
 
     flipped = np.flipud(rgb)
     img = Image.fromarray(flipped, mode="RGB")
-    img = _resize_longest_side(img, MAX_PREVIEW_SIZE)
+    if max_size is not None:
+        img = _resize_longest_side(img, max_size)
     img.save(out_path, format="PNG", optimize=True)
 
 

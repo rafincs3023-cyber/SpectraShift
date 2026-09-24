@@ -7,12 +7,42 @@ export function Help() {
       </div>
 
       <div className="card">
+        <h2>Spectral View vs Time Compare</h2>
+        <dl className="kv-list">
+          <div>
+            <dt>Spectral View</dt>
+            <dd>Same sky, same time, across 102 wavelength channels.</dd>
+          </div>
+          <div>
+            <dt>Time Compare</dt>
+            <dd>Same sky, observed at different times.</dd>
+          </div>
+        </dl>
+      </div>
+
+      <div className="card">
+        <h2>Spectral View</h2>
+        <p>
+          Step through all 102 SPHEREx channels (0.74–5.01 µm, detectors
+          D1–D6) with the slider, the wavelength bar, Prev / Next, a channel
+          number, or the ← / → keys. The side panel shows the selected
+          channel&apos;s detector, wavelength range, bandwidth and sky
+          coverage. Click anywhere on the image, or enter RA/Dec, to plot
+          that position&apos;s brightness in every channel.
+        </p>
+      </div>
+
+      <div className="card">
         <h2>Candidates page</h2>
         <p>
-          Lists every validated three-epoch motion candidate, ranked by
-          final priority score. Click any candidate ID to see its full
-          evidence: per-epoch positions, motion rate, trajectory validation
-          scores, and the full catalogue cross-match audit trail.
+          Lists the three-epoch motion candidates that pass the current
+          pipeline — linking across Epochs A → C → B, the stationary-source
+          and blend vetoes, trajectory validation — ranked by final priority
+          score. The list can be empty: the summary line shows how many
+          linked tracks were rejected and why. An empty list does not mean
+          that no moving sources exist in the field. When candidates exist,
+          click an ID to see its full evidence: per-epoch positions, motion
+          rate, validation scores and the catalogue cross-match audit trail.
         </p>
       </div>
 
@@ -50,6 +80,28 @@ export function Help() {
       </div>
 
       <div className="card">
+        <h2>Compare page: datasets</h2>
+        <dl className="kv-list">
+          <div>
+            <dt>~6-Month Compare (primary)</dt>
+            <dd>
+              Jun 19, 2025 → Dec 17, 2025 (181.77 days, ~5.97 months), Epoch
+              B registered onto Epoch A&apos;s pixel grid and cut to one fully
+              valid common frame. Difference is B − A: positive values mean
+              higher surface brightness in the later epoch.
+            </dd>
+          </div>
+          <div>
+            <dt>31-Day Compare (secondary)</dt>
+            <dd>
+              Epochs A / C / B (May 9 → Jun 9, 2025); only the A–B pair is
+              pixel-registered and has a precomputed A − B difference.
+            </dd>
+          </div>
+        </dl>
+      </div>
+
+      <div className="card">
         <h2>Compare page: modes</h2>
         <dl className="kv-list">
           <div>
@@ -67,9 +119,9 @@ export function Help() {
           <div>
             <dt>Difference</dt>
             <dd>
-              Shows the precomputed Epoch A − Epoch B difference image
-              when that exact pair is selected; not available for other
-              pairs, since no difference was computed for them.
+              The precomputed difference image: B − A for the ~6-month pair;
+              A − B for the 31-day A/B pair (not available for pairs that
+              were never registered onto a common grid).
             </dd>
           </div>
           <div>
@@ -129,8 +181,12 @@ export function Help() {
           <div>
             <dt>KNOWN_OBJECT</dt>
             <dd>
-              A catalogue match was found that plausibly explains this
-              candidate (e.g. the same object recurring across epochs).
+              A strong catalogue association explains the detections: the
+              catalogue position, propagated to each observation epoch,
+              agrees within the combined uncertainties, the match is unique,
+              and a chance coincidence is very unlikely. This includes the
+              case where each epoch is a different known star, so the
+              apparent motion comes from linking unrelated stars.
             </dd>
           </div>
           <div>
@@ -143,10 +199,12 @@ export function Help() {
           <div>
             <dt>UNCERTAIN</dt>
             <dd>
-              An important check (such as the full Solar System minor-body
-              catalogue search) could not be completed, so absence of a
-              match cannot be treated as conclusive. This never means
-              "unknown" or "a new planet."
+              The evidence is not strong enough either way: a possible but
+              not secure match, several plausible matches, a required check
+              that could not be completed, or positions/motion that do not
+              agree across epochs. Hover the status on the Candidates page
+              for the specific reason. This never means "unknown" or "a new
+              planet."
             </dd>
           </div>
         </dl>

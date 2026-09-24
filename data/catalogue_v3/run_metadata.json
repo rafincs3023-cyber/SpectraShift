@@ -1,0 +1,103 @@
+{
+  "epochs_mjd": {
+    "A": 60804.58166331,
+    "C": 60822.30895912,
+    "B": 60835.420874722
+  },
+  "sigma_obs_by_flux_bin": [
+    {
+      "flux_lo": 0.0,
+      "flux_hi": 3.0,
+      "n": 564,
+      "sigma_obs": 0.79,
+      "true_frac": 0.97
+    },
+    {
+      "flux_lo": 3.0,
+      "flux_hi": 6.0,
+      "n": 281,
+      "sigma_obs": 0.67,
+      "true_frac": 0.96
+    },
+    {
+      "flux_lo": 6.0,
+      "flux_hi": 15.0,
+      "n": 214,
+      "sigma_obs": 0.56,
+      "true_frac": 0.96
+    },
+    {
+      "flux_lo": 15.0,
+      "flux_hi": Infinity,
+      "n": 221,
+      "sigma_obs": 0.54,
+      "true_frac": 0.94
+    }
+  ],
+  "flux_vs_g": {
+    "a": 0.8258889446332774,
+    "b": -14.22483448822532,
+    "scatter_mag": 0.6628754083348847,
+    "n": 1085
+  },
+  "constants": {
+    "chi2_accept": 13.816,
+    "p_chance_secure": 0.05,
+    "joint_p_chance_known": 0.001,
+    "joint_p_chance_high": 1e-05,
+    "mag_outlier_nsigma": 3.0,
+    "persist_snr": 3.0,
+    "pm_allowance_mas_yr": 20.0
+  },
+  "services": {
+    "Gaia DR3": {
+      "ok": true,
+      "error": null,
+      "required": true
+    },
+    "JPL Small-Body Identification (sb_ident)": {
+      "ok": true,
+      "error": null,
+      "required": true
+    },
+    "JPL Horizons (planets)": {
+      "ok": true,
+      "error": null,
+      "required": true
+    },
+    "SkyBoT (IMCCE)": {
+      "ok": false,
+      "error": "ConnectTimeout",
+      "required": false
+    },
+    "MPC Checker": {
+      "ok": false,
+      "error": "ConnectTimeout",
+      "required": false
+    },
+    "SIMBAD": {
+      "ok": true,
+      "error": null,
+      "required": true
+    }
+  },
+  "sso_in_field": {
+    "A": [
+      "313052 (2000 RL52)",
+      "506425 (2000 DQ110)",
+      "(2003 YS1)",
+      "(2023 RW3)",
+      "(2024 YL17)",
+      "C/2017 Y2 (PANSTARRS)"
+    ],
+    "C": [
+      "(2019 TY6)",
+      "(2025 EF)",
+      "C/2017 Y2 (PANSTARRS)"
+    ],
+    "B": [
+      "(2010 HK)",
+      "C/2017 Y2 (PANSTARRS)"
+    ]
+  }
+}

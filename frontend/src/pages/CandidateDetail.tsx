@@ -4,6 +4,7 @@ import { api, ApiError } from "../api/client";
 import type {
   CandidateDetail as CandidateDetailType,
   CandidateSpectrumResponse,
+  CatalogueExplanation,
   CrossmatchResponse,
 } from "../api/types";
 import { LoadingState } from "../components/LoadingState";
@@ -20,6 +21,24 @@ function fmt(value: number | null | undefined, digits = 2): string {
   }
   return value.toFixed(digits);
 }
+
+/** Catalogue proper motions are ~1e-5 ″/day, so switch to exponent form. */
+function fmtRate(value: number | null | undefined): string {
+  if (value === null || value === undefined || Number.isNaN(value)) return "—";
+  return value !== 0 && Math.abs(value) < 0.01
+    ? value.toExponential(1)
+    : value.toFixed(2);
+}
+
+const EXPLANATION_LABELS: Record<CatalogueExplanation, string> = {
+  KNOWN_SOLAR_SYSTEM_OBJECT: "Known Solar System small body (ephemeris from SPHEREx)",
+  STATIC_KNOWN_STAR: "Same catalogued star at several epochs (not moving)",
+  LINKED_KNOWN_STARS:
+    "Each epoch is a different catalogued star (apparent motion from linking unrelated stars)",
+  HIGH_PM_STAR_CANDIDATE: "Possible high-proper-motion star (manual review)",
+  NO_ASSOCIATION: "No consistent catalogue association",
+  INSUFFICIENT_OR_AMBIGUOUS: "Partial, ambiguous or inconsistent catalogue evidence",
+};
 
 const MATCH_STATUS_LABELS: Record<string, string> = {
   MATCH: "Match",
@@ -132,9 +151,62 @@ export function CandidateDetail() {
             <div className="card">
               <h2>Catalogue Status</h2>
               <div className="catalogue-status-row">
-                <StatusBadge status={detail.catalogue.final_catalogue_status} />
+                <StatusBadge
+                  status={detail.catalogue.final_catalogue_status}
+                  reason={detail.catalogue.status_reason}
+                />
+                {detail.catalogue.match_confidence &&
+                  detail.catalogue.match_confidence !== "NONE" && (
+                    <span className="confidence-note">
+                      {detail.catalogue.match_confidence.toLowerCase()} confidence
+                    </span>
+                  )}
               </div>
+              {detail.catalogue.status_reason && (
+                <p className="notes-text status-reason">
+                  <strong>Why this status:</strong>{" "}
+                  {detail.catalogue.status_reason}
+                </p>
+              )}
               <dl className="kv-list">
+                {detail.catalogue.explanation && (
+                  <div>
+                    <dt>Classification basis</dt>
+                    <dd>{EXPLANATION_LABELS[detail.catalogue.explanation]}</dd>
+                  </div>
+                )}
+                {detail.catalogue.best_match_object && (
+                  <div>
+                    <dt>Matched object(s)</dt>
+                    <dd>{detail.catalogue.best_match_object}</dd>
+                  </div>
+                )}
+                {detail.catalogue.observed_motion && (
+                  <div>
+                    <dt>Observed motion</dt>
+                    <dd>
+                      {fmt(detail.catalogue.observed_motion.rate_arcsec_per_day, 2)}
+                      ″/day · PA{" "}
+                      {fmt(detail.catalogue.observed_motion.position_angle_deg, 0)}°
+                    </dd>
+                  </div>
+                )}
+                {detail.catalogue.expected_motion?.source && (
+                  <div>
+                    <dt>Expected (catalogue) motion</dt>
+                    <dd>
+                      {fmtRate(detail.catalogue.expected_motion.rate_arcsec_per_day)}
+                      ″/day · {detail.catalogue.expected_motion.source}
+                    </dd>
+                  </div>
+                )}
+                {detail.catalogue.joint_p_chance !== null &&
+                  detail.catalogue.joint_p_chance !== undefined && (
+                    <div>
+                      <dt>Joint chance-coincidence probability</dt>
+                      <dd>{detail.catalogue.joint_p_chance.toExponential(1)}</dd>
+                    </div>
+                  )}
                 <div>
                   <dt>Nearest coincidence</dt>
                   <dd>
@@ -147,21 +219,93 @@ export function CandidateDetail() {
                   </dd>
                 </div>
                 <div>
-                  <dt>Services succeeded</dt>
+                  <dt>Catalogues checked</dt>
                   <dd>
-                    {detail.catalogue.services_succeeded.join(", ") || "—"}
+                    {(detail.catalogue.catalogues_checked ??
+                      detail.catalogue.services_succeeded
+                    ).join(", ") || "—"}
                   </dd>
                 </div>
                 <div>
-                  <dt>Services failed</dt>
-                  <dd>{detail.catalogue.services_failed.join(", ") || "—"}</dd>
+                  <dt>Required checks failed</dt>
+                  <dd>{detail.catalogue.services_failed.join(", ") || "none"}</dd>
                 </div>
+                {!!detail.catalogue.optional_services_unavailable?.length && (
+                  <div>
+                    <dt>Optional services unavailable</dt>
+                    <dd>
+                      {detail.catalogue.optional_services_unavailable.join(", ")}
+                    </dd>
+                  </div>
+                )}
               </dl>
-              {detail.catalogue.notes && (
+              {!detail.catalogue.status_reason && detail.catalogue.notes && (
                 <p className="notes-text">{detail.catalogue.notes}</p>
               )}
             </div>
           </section>
+
+          {!!detail.catalogue.per_epoch?.length && (
+            <section className="card">
+              <h2>Catalogue Evidence by Epoch</h2>
+              <p className="section-note">
+                Catalogue positions are propagated to each observation epoch
+                with their own proper motion. χ² compares the separation with
+                the combined SPHEREx + catalogue uncertainty (consistent if
+                ≤ 13.8: 2 degrees of freedom, 99.9%). Persistence is the
+                forced-photometry SNR at this epoch&apos;s position in the
+                other two images; a static source stays detectable there.
+              </p>
+              <div className="table-scroll">
+                <table className="data-table">
+                  <thead>
+                    <tr>
+                      <th>Epoch</th>
+                      <th>Nearest catalogue match</th>
+                      <th>Expected RA, Dec at epoch (deg)</th>
+                      <th>Separation (″)</th>
+                      <th>σ total (″)</th>
+                      <th>χ²</th>
+                      <th>Consistent matches</th>
+                      <th>P(chance)</th>
+                      <th>Flux vs G (mag)</th>
+                      <th>Persistence SNR</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {detail.catalogue.per_epoch.map((m) => (
+                      <tr key={m.epoch}>
+                        <td data-label="Epoch">{m.epoch}</td>
+                        <td data-label="Nearest catalogue match">
+                          {m.match_object || "—"}
+                        </td>
+                        <td data-label="Expected RA, Dec (deg)">
+                          {fmt(m.expected_ra_deg, 5)}, {fmt(m.expected_dec_deg, 5)}
+                        </td>
+                        <td data-label="Separation (arcsec)">
+                          {fmt(m.separation_arcsec, 2)}
+                        </td>
+                        <td data-label="Sigma total (arcsec)">
+                          {fmt(m.sigma_total_arcsec, 2)}
+                        </td>
+                        <td data-label="Chi2">{fmt(m.chi2, 2)}</td>
+                        <td data-label="Consistent matches">
+                          {m.n_consistent ?? "—"}
+                        </td>
+                        <td data-label="P(chance)">{fmt(m.p_chance, 4)}</td>
+                        <td data-label="Flux vs G residual (mag)">
+                          {fmt(m.mag_residual, 2)}
+                        </td>
+                        <td data-label="Persistence SNR">
+                          {m.persistence_snr?.replace(/;/g, " · ") ?? "—"}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </section>
+          )}
 
           <section className="card">
             <h2>Positions by Epoch</h2>

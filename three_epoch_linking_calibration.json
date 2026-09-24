@@ -1,0 +1,127 @@
+{
+  "detection_sigma": 7.0,
+  "counterpart_sigma": 4.0,
+  "chi2_gate": 11.829,
+  "nonlinear_fraction": 0.03,
+  "p_chance_max": 0.05,
+  "psf_fwhm_arcsec": 5.222648214064271,
+  "blend_radius_arcsec": 8.06836751566689,
+  "false_veto_rate": {
+    "per_epoch_random_positions": {
+      "A": {
+        "stationary": 0.0258,
+        "blend": 0.0917
+      },
+      "C": {
+        "stationary": 0.028,
+        "blend": 0.0836
+      },
+      "B": {
+        "stationary": 0.02615,
+        "blend": 0.09295
+      }
+    },
+    "genuine_mover_track_vetoed_probability": 0.09975521995474068,
+    "n_probes": 20000
+  },
+  "registration": {
+    "A-C": {
+      "offset_ra": 0.036612630756809636,
+      "offset_dec": -0.007134749034776178,
+      "sigma_reg": 0.10089156202867211,
+      "n_matched": 23766,
+      "n_tiles": 14
+    },
+    "A-B": {
+      "offset_ra": 0.0395333082619338,
+      "offset_dec": 0.020719419907777592,
+      "sigma_reg": 0.08221108588448972,
+      "n_matched": 25980,
+      "n_tiles": 16
+    },
+    "C-B": {
+      "offset_ra": -0.013830714759149258,
+      "offset_dec": -0.000494947443030469,
+      "sigma_reg": 0.10989727145713059,
+      "n_matched": 25937,
+      "n_tiles": 14
+    }
+  },
+  "sigma_det_by_flux": [
+    {
+      "flux_lo": 0.0,
+      "flux_hi": 2.0,
+      "n": 17749,
+      "sigma_pair": 0.83,
+      "sigma_det": 0.5827642204464548
+    },
+    {
+      "flux_lo": 2.0,
+      "flux_hi": 4.0,
+      "n": 19334,
+      "sigma_pair": 0.78,
+      "sigma_det": 0.5471417884173757
+    },
+    {
+      "flux_lo": 4.0,
+      "flux_hi": 8.0,
+      "n": 16940,
+      "sigma_pair": 0.74,
+      "sigma_det": 0.5186175244171414
+    },
+    {
+      "flux_lo": 8.0,
+      "flux_hi": 20.0,
+      "n": 13686,
+      "sigma_pair": 0.71,
+      "sigma_det": 0.4972063320519603
+    },
+    {
+      "flux_lo": 20.0,
+      "flux_hi": 80.0,
+      "n": 9650,
+      "sigma_pair": 0.69,
+      "sigma_det": 0.48292249547164834
+    },
+    {
+      "flux_lo": 80.0,
+      "flux_hi": Infinity,
+      "n": 2316,
+      "sigma_pair": 0.71,
+      "sigma_det": 0.4972063320519603
+    }
+  ],
+  "source_counts": {
+    "A": {
+      "detected": 33531,
+      "counterpart_list": 38223,
+      "stationary": 31251,
+      "blend_fragment": 1867
+    },
+    "C": {
+      "detected": 35637,
+      "counterpart_list": 39113,
+      "stationary": 30184,
+      "blend_fragment": 863
+    },
+    "B": {
+      "detected": 34839,
+      "counterpart_list": 38612,
+      "stationary": 33322,
+      "blend_fragment": 1108
+    }
+  },
+  "tracks": {
+    "accepted": 0,
+    "rejected": {
+      "STATIONARY_SOURCE": 673,
+      "BLEND_MISLINK": 52,
+      "INCONSISTENT_TRAJECTORY": 0
+    }
+  },
+  "mjd": {
+    "A": 60804.58166331,
+    "C": 60822.30895912,
+    "B": 60835.420874722
+  }
+}

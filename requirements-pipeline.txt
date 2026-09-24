@@ -1,0 +1,12 @@
+# Offline science pipeline (project root scripts). The web backend only
+# needs backend/requirements.txt.
+numpy
+pandas
+scipy
+astropy
+photutils
+reproject
+matplotlib
+astroquery
+requests
+Pillow
