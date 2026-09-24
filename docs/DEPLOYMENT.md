@@ -15,11 +15,21 @@ No hosting provider is configured in this repository yet. This page records what
 |---|---|---|
 | `data/spherex/SpectraShift_Part1_16.fits.gz`, `SpectraShift_Remaining86.fits.gz` (102-channel mosaic) | ~3.1 GB | No — upload to the server volume |
 | 31-day Level-2 frames (3 × `level2_*.fits` at the project root) | ~215 MB | Yes |
+| ~6-month pair source frames (2 × `level2_*.fits`, headers used for detector/PSF) | ~143 MB | Yes |
 | `data/time_compare_6month/` (verified ~6-month products) | ~10 MB | Yes |
 | Pipeline CSV/JSON outputs at the project root | < 15 MB | Yes |
 | Optional `data/spherex/cache/` cube | ~3 GB | No (rebuild with `backend/build_spectral_cache.py`) |
 
 The Spectral View cannot work on a host without the ~3.1 GB mosaic files, so a platform without a persistent volume (or one that only deploys from Git) is not sufficient on its own.
+
+## Railway (backend service)
+
+The repository root contains a `Dockerfile` for the backend (Python 3.11, runs `uvicorn main:app` from `backend/` on `$PORT`). Railway detects it automatically.
+
+1. Service settings: **Root Directory = repository root** (not `/backend` — the backend reads root-level data). Builder: Dockerfile.
+2. Add a volume mounted at **`/app/data/spherex`** and upload `SpectraShift_Part1_16.fits.gz` and `SpectraShift_Remaining86.fits.gz` to it (or mount elsewhere and set `SPECTRASHIFT_SPHEREX_DIR`). The optional access cache is written to `cache/` inside the same volume.
+3. Health check path: `/api/health`.
+4. Until the mosaic is on the volume, everything works except `/api/spectral/*` (returns 503 with an explanation).
 
 ## API URL configuration
 

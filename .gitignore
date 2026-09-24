@@ -54,6 +54,10 @@ data/spherex/cache/
 # are already tracked; the verified ~6-month products live in
 # data/time_compare_6month/.
 level2_*.fits
+# ...except the two source frames of the verified ~6-month pair: the backend
+# reads their headers (detector, PSF FWHM) for the Time Compare metadata.
+!level2_2025W25_1B_0652_1D3_spx_l2b-v20-2025-253.fits
+!level2_2025W51_1A_0594_2D3_spx_l2b-v21-2025-354.fits
 
 # Injection-recovery test outputs (regenerate with test_linker_injection.py)
 data/injection_test/

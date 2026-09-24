@@ -1,0 +1,7 @@
+# Scientific data and images are binary: never apply line-ending conversion
+*.fits binary
+*.fits.gz binary
+*.fz binary
+*.npy binary
+*.png binary
+*.jpg binary
