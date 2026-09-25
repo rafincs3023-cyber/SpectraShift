@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { useSearchParams } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import { api, ApiError, imageUrl } from "../api/client";
 import type {
   CandidateDetail,
@@ -13,11 +13,20 @@ import { ErrorState } from "../components/ErrorState";
 import { ZoomPanViewer } from "../components/explore/ZoomPanViewer";
 import { ExploreMarkerOverlay } from "../components/explore/ExploreMarkerOverlay";
 import { SelectedSourcePanel } from "../components/explore/SelectedSourcePanel";
+import { PageIntro } from "../components/ui/PageIntro";
+import { InfoTooltip } from "../components/ui/InfoTooltip";
+import { EmptyStateCard } from "../components/ui/EmptyStateCard";
 
 function detectorLabel(detector: number | null | undefined): string {
   if (detector === null || detector === undefined) return "Unknown";
-  const band = detector <= 3 ? "SWIR" : "MWIR";
+  const band = detector <= 3 ? "short-wave infrared" : "mid-wave infrared";
   return `Detector ${detector} (${band})`;
+}
+
+function shortDate(iso: string | null | undefined): string {
+  if (!iso) return "unknown date";
+  const d = new Date(/[zZ]|[+-]\d\d:?\d\d$/.test(iso) ? iso : `${iso}Z`);
+  return d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric", timeZone: "UTC" });
 }
 
 function fmt(value: number | null | undefined, digits = 3): string {
@@ -145,7 +154,7 @@ export function Explore() {
 
   if (loading) {
     return (
-      <div className="page">
+      <div className="page explore-page">
         <LoadingState label="Loading observations…" />
       </div>
     );
@@ -153,28 +162,29 @@ export function Explore() {
 
   if (loadError || !observations || observations.length === 0) {
     return (
-      <div className="page">
-        <ErrorState message={loadError ?? "No observations available."} />
+      <div className="page explore-page">
+        <ErrorState message={loadError ?? "No observations are available right now."} />
       </div>
     );
   }
 
   return (
-    <div className="page">
-      <div className="page-header">
-        <h1>Sky Explorer</h1>
-        <p className="page-subtitle">
-          Browse a single SPHEREx epoch and inspect validated candidate
-          sources directly on the sky. Live data from{" "}
-          <code>GET /api/observations</code>,{" "}
-          <code>GET /api/compare/candidate-markers</code>, and{" "}
-          <code>GET /api/candidates/&#123;id&#125;/spectrum</code>.
-        </p>
-      </div>
+    <div className="page explore-page">
+      <PageIntro
+        eyebrow="SPHEREx · One observation"
+        title="Explore"
+        lead="Browse one observation and inspect interesting sky sources."
+        what="Shows one real SPHEREx image of the sky, taken on a single date."
+        how="Choose a date, then scroll to zoom and drag to pan. If markers appear, click one to inspect it."
+        result="Markers show possible moving objects that passed every check. If no markers appear, nothing in this image passed those checks."
+      />
 
       <div className="compare-controls">
         <label className="control-field">
-          <span>Observation / Epoch</span>
+          <span>
+            Observation date
+            <InfoTooltip term="observationDate" />
+          </span>
           <select
             value={epoch}
             onChange={(e) => {
@@ -184,14 +194,17 @@ export function Explore() {
           >
             {observations.map((o) => (
               <option key={o.epoch} value={o.epoch}>
-                Epoch {o.epoch} — {o.date_obs?.slice(0, 10) ?? "unknown date"}
+                {shortDate(o.date_obs)} (Epoch {o.epoch})
               </option>
             ))}
           </select>
         </label>
 
         <label className="control-field">
-          <span>Band</span>
+          <span>
+            Wavelength band
+            <InfoTooltip term="detector" />
+          </span>
           <select disabled value={availableBands[0]?.[0] ?? ""}>
             {availableBands.length === 0 && <option>No band data</option>}
             {availableBands.map(([detector, label]) => (
@@ -204,9 +217,9 @@ export function Explore() {
       </div>
       {availableBands.length <= 1 && (
         <p className="section-note band-note">
-          Only one detector/band was downloaded for this project (
-          {availableBands[0]?.[1] ?? "none"}); the band selector reflects
-          the real available data only.
+          Only one wavelength band is available for these images (
+          {availableBands[0]?.[1] ?? "none"}). For all 102 wavelengths, use
+          the Spectral View.
         </p>
       )}
 
@@ -214,10 +227,9 @@ export function Explore() {
         <div className="compare-viewer">
           <div className="obs-panel">
             <div className="obs-panel-header">
-              <span className="obs-epoch-chip">Epoch {epoch}</span>
+              <span className="obs-epoch-chip">{shortDate(activeObservation?.date_obs)}</span>
               <span className="obs-panel-meta">
-                {activeObservation?.date_obs?.slice(0, 10) ?? "—"} · MJD{" "}
-                {fmt(activeObservation?.mjd_obs, 3)}
+                Epoch {epoch} · MJD {fmt(activeObservation?.mjd_obs, 3)}
               </span>
             </div>
 
@@ -225,7 +237,7 @@ export function Explore() {
               <div className="obs-image-frame explore-frame">
                 <img
                   src={imageUrl(`/api/observations/${epoch}/preview`)}
-                  alt={`SPHEREx sky image, Epoch ${epoch}`}
+                  alt={`SPHEREx sky image taken ${shortDate(activeObservation?.date_obs)}`}
                   className="obs-image"
                   draggable={false}
                   crossOrigin="anonymous"
@@ -241,39 +253,60 @@ export function Explore() {
             </ZoomPanViewer>
 
             <div className="obs-panel-footer">
-              <span>Detector {activeObservation?.detector ?? "—"}</span>
+              <span>Scroll to zoom · drag to pan</span>
               <span>
-                RA {fmt(activeObservation?.ra_center_deg, 3)}° · Dec{" "}
+                Image reference point: RA {fmt(activeObservation?.ra_center_deg, 3)}° · Dec{" "}
                 {fmt(activeObservation?.dec_center_deg, 3)}°
+                <InfoTooltip term="skyCoordinates" />
               </span>
             </div>
           </div>
 
-          {markersLoading && <LoadingState label="Loading candidate markers…" />}
+          {markersLoading && <LoadingState label="Checking for moving-object markers…" />}
           {!markersLoading && markersError && <ErrorState message={markersError} />}
-          {!markersLoading && !markersError && (
+          {!markersLoading && !markersError && markers.length > 0 && (
             <p className="section-note">
-              {markers.length === 0
-                ? "No validated candidates fall within this epoch's frame."
-                : `${markers.length} candidate marker${
-                    markers.length === 1 ? "" : "s"
-                  } shown. Click one to inspect it.`}
+              {markers.length} possible moving object{markers.length === 1 ? "" : "s"} marked.
+              Click a marker to inspect it.
             </p>
           )}
         </div>
 
-        <SelectedSourcePanel
-          epoch={epoch}
-          loading={selectedLoading}
-          error={selectedError}
-          detail={selectedDetail}
-          spectrum={selectedSpectrum}
-        />
+        <div className="explore-side">
+          <SelectedSourcePanel
+            epoch={epoch}
+            loading={selectedLoading}
+            error={selectedError}
+            detail={selectedDetail}
+            spectrum={selectedSpectrum}
+          />
+          {!markersLoading && !markersError && markers.length === 0 && (
+            <EmptyStateCard
+              title="No validated moving-object markers appear in this view."
+              actions={
+                <>
+                  <Link to="/candidates" className="btn btn-secondary">
+                    Why are there no markers?
+                  </Link>
+                  <Link to="/spectral" className="btn btn-secondary">
+                    Explore 102 wavelengths
+                  </Link>
+                </>
+              }
+            >
+              <p>
+                You can still browse the image: scroll to zoom in on the star
+                field and drag to move around. Switch the date above to see the
+                same field on another day.
+              </p>
+            </EmptyStateCard>
+          )}
+        </div>
       </div>
 
       <p className="disclaimer">
-        Markers show preliminary, unconfirmed three-epoch motion candidates.
-        Apparent change shown here is not a confirmed discovery.
+        Real SPHEREx data. Markers, when present, show possible moving objects,
+        not confirmed discoveries.
       </p>
     </div>
   );

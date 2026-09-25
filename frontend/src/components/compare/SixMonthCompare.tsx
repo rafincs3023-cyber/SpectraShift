@@ -10,6 +10,9 @@ import { BlinkCompare } from "./BlinkCompare";
 import { DifferenceView } from "./DifferenceView";
 import { OverlayCanvas } from "./OverlayCanvas";
 import { ModeTabs } from "./ModeTabs";
+import { DifferenceLegend } from "./DifferenceLegend";
+import { InfoTooltip } from "../ui/InfoTooltip";
+import { TechnicalDetails } from "../ui/TechnicalDetails";
 import type { CompareMode } from "./compareModes";
 
 /** metadata.json dates are UTC without a zone suffix. */
@@ -34,7 +37,7 @@ function withLabel(side: SixMonthSide, which: "A" | "B"): SixMonthSide {
   const date = side.observation?.date_obs;
   return {
     ...side,
-    label: `Epoch ${which} · ${date ? formatObsDate(date) : "unknown date"}`,
+    label: `${which === "A" ? "Earlier" : "Later"} image · ${date ? formatObsDate(date) : "unknown date"}`,
   };
 }
 
@@ -72,7 +75,7 @@ export function SixMonthCompare({
   }, []);
 
   if (error) return <ErrorState message={error} />;
-  if (!data) return <LoadingState label="Loading ~6-month comparison…" />;
+  if (!data) return <LoadingState label="Loading the two images…" />;
 
   const a = withLabel(data.epoch_a, "A");
   const b = withLabel(data.epoch_b, "B");
@@ -99,20 +102,16 @@ export function SixMonthCompare({
     <>
       <div className="time-compare-summary">
         <strong>
-          {dateA} → {dateB}
+          Earlier image {dateA} → later image {dateB}
         </strong>
         <span>
-          {data.time_gap_days.toFixed(2)} days (~
+          {data.time_gap_days.toFixed(2)} days apart (~
           {data.time_gap_months.toFixed(2)} months)
         </span>
         <span>
-          Detector {detectorText(data.epoch_a.observation?.detector)} ·{" "}
-          {data.epoch_a.wavelength_um.toFixed(4)} /{" "}
-          {data.epoch_b.wavelength_um.toFixed(4)} µm
+          Same wavelength (≈{data.epoch_a.wavelength_um.toFixed(2)} µm) and same detector
         </span>
-        <span>
-          <strong>Target:</strong> {targetText}
-        </span>
+        <span>Lined up pixel by pixel, so unchanged stars stay in place</span>
       </div>
 
       <ModeTabs mode={mode} onChange={onModeChange} />
@@ -150,37 +149,32 @@ export function SixMonthCompare({
               previewUrl={data.difference_preview_url}
               epochA="A"
               epochB="B"
-              alt={`Epoch B (${dateB}) minus Epoch A (${dateA}) difference`}
+              alt={`Later image (${dateB}) minus earlier image (${dateA})`}
               caption={
-                <div className="difference-caption">
-                  <p className="difference-convention">
-                    <strong>B − A:</strong> positive values indicate higher
-                    surface brightness in the later epoch.
-                  </p>
-                  <p className="section-note">
-                    <span className="swatch swatch-pos" /> Red = higher in
-                    Epoch B ({dateB}, later) ·{" "}
-                    <span className="swatch swatch-neg" /> Blue = higher in
-                    Epoch A ({dateA}, earlier) · near-black = little or no
-                    change. Display is symmetric about zero, clipped at the
-                    99th percentile of |B − A|.{" "}
-                    <a
-                      href={imageUrl(data.difference_figure_url)}
-                      target="_blank"
-                      rel="noreferrer"
-                    >
-                      Reference figure with {unit} colorbar ↗
-                    </a>
-                  </p>
-                  <p className="section-note">
-                    A residual here is an apparent variation between the two
-                    observations, not a confirmed physical change. It can
-                    come from real brightness change or motion, but also
-                    from the {data.wavelength_delta_um.toFixed(4)} µm
-                    wavelength offset, PSF/alignment residuals around bright
-                    stars, or detector artifacts.
-                  </p>
-                </div>
+                <>
+                  <DifferenceLegend
+                    formula="Later image − Earlier image (B − A): positive values indicate higher surface brightness in the later epoch."
+                    red={`brighter in the later image (${dateB})`}
+                    blue={`brighter in the earlier image (${dateA})`}
+                  />
+                  <TechnicalDetails summary="Technical details about the difference image">
+                    <p>
+                      Display is symmetric about zero and clipped at the 99th
+                      percentile of |B − A|.{" "}
+                      <a href={imageUrl(data.difference_figure_url)} target="_blank" rel="noreferrer">
+                        Reference figure with {unit} colour bar ↗
+                      </a>
+                    </p>
+                    <p>
+                      A residual is an apparent variation between the two
+                      observations, not a confirmed physical change. Besides
+                      real brightness change or motion it can come from the{" "}
+                      {data.wavelength_delta_um.toFixed(4)} µm wavelength
+                      offset, PSF/alignment residuals around bright stars, or
+                      detector artifacts.
+                    </p>
+                  </TechnicalDetails>
+                </>
               }
             />
           )}
@@ -189,35 +183,76 @@ export function SixMonthCompare({
             <OverlayCanvas epochA={a} epochB={b} markers={[]} />
           )}
 
-          <p className="section-note">
-            {data.alignment_note} Displayed frame: {region.width} ×{" "}
-            {region.height} px, {(region.valid_fraction * 100).toFixed(2)}%
-            valid in both epochs ({region.invalid_pixels} isolated invalid
-            pixels drawn neutral). Frame center {frameCenterText}. Target{" "}
-            {targetText} lies {targetNote}.
-          </p>
+          <TechnicalDetails summary="Technical details about the alignment">
+            <p>
+              {data.alignment_note} Displayed frame: {region.width} ×{" "}
+              {region.height} px, {(region.valid_fraction * 100).toFixed(2)}%
+              valid in both epochs ({region.invalid_pixels} isolated invalid
+              pixels drawn neutral). Frame center {frameCenterText}. Target{" "}
+              {targetText} lies {targetNote}.
+            </p>
+          </TechnicalDetails>
         </div>
 
         <aside className="card time-compare-info">
-          <h2>Observation metadata</h2>
+          <h2>About these images</h2>
           <dl className="kv-list kv-list-compact">
             <div>
-              <dt>Epoch A</dt>
+              <dt>Earlier image</dt>
+              <dd>{dateA}</dd>
+            </div>
+            <div>
+              <dt>Later image</dt>
+              <dd>{dateB}</dd>
+            </div>
+            <div>
+              <dt>Time between</dt>
+              <dd>
+                {data.time_gap_days.toFixed(2)} days (~
+                {data.time_gap_months.toFixed(2)} months)
+              </dd>
+            </div>
+            <div>
+              <dt>
+                Wavelength
+                <InfoTooltip term="wavelength" />
+              </dt>
+              <dd>≈{data.epoch_a.wavelength_um.toFixed(2)} µm (both)</dd>
+            </div>
+            <div>
+              <dt>
+                Detector
+                <InfoTooltip term="detector" />
+              </dt>
+              <dd>{detectorText(data.epoch_a.observation?.detector)}</dd>
+            </div>
+            <div>
+              <dt>
+                Brightness unit
+                <InfoTooltip term="unit" />
+              </dt>
+              <dd>{unit}</dd>
+            </div>
+            <div>
+              <dt>
+                Target
+                <InfoTooltip term="skyCoordinates" />
+              </dt>
+              <dd>{targetText}</dd>
+            </div>
+          </dl>
+          <TechnicalDetails>
+          <dl className="kv-list kv-list-compact">
+            <div>
+              <dt>Epoch A (earlier)</dt>
               <dd>
                 {dateA} · {formatObsTime(data.epoch_a.observation!.date_obs!)}
               </dd>
             </div>
             <div>
-              <dt>Epoch B</dt>
+              <dt>Epoch B (later)</dt>
               <dd>
                 {dateB} · {formatObsTime(data.epoch_b.observation!.date_obs!)}
-              </dd>
-            </div>
-            <div>
-              <dt>Time baseline</dt>
-              <dd>
-                {data.time_gap_days.toFixed(2)} d (~
-                {data.time_gap_months.toFixed(2)} mo)
               </dd>
             </div>
             <div>
@@ -236,10 +271,6 @@ export function SixMonthCompare({
                   ` (${data.delta_over_bandwidth.toFixed(3)} × bandwidth)`}
               </dd>
             </div>
-            <div>
-              <dt>Detector</dt>
-              <dd>{detectorText(data.epoch_a.observation?.detector)}</dd>
-            </div>
             {psfA !== null && psfB !== null && (
               <div>
                 <dt>PSF FWHM</dt>
@@ -250,10 +281,6 @@ export function SixMonthCompare({
                 </dd>
               </div>
             )}
-            <div>
-              <dt>Units</dt>
-              <dd>{unit}</dd>
-            </div>
             <div>
               <dt>Aligned crop (bounding box)</dt>
               <dd>
@@ -270,10 +297,6 @@ export function SixMonthCompare({
                 {region.width} × {region.height} px ·{" "}
                 {(region.valid_fraction * 100).toFixed(2)}% valid
               </dd>
-            </div>
-            <div>
-              <dt>Target</dt>
-              <dd>{targetText}</dd>
             </div>
             <div>
               <dt>Frame center</dt>
@@ -301,15 +324,14 @@ export function SixMonthCompare({
             </a>
             .
           </p>
+          </TechnicalDetails>
         </aside>
       </div>
 
       <p className="disclaimer">
-        This ~6-month comparison shows apparent change between two real
-        SPHEREx observations. It does not identify, confirm, or claim any new
-        object, and an image difference alone does not establish motion.
-        Candidate markers from the 31-day three-epoch analysis are not shown
-        here, because they belong to a different observation set.
+        These are two real SPHEREx observations. Any difference you see is an
+        apparent change, not a confirmed discovery, and a difference on its own
+        does not prove that something moved.
       </p>
     </>
   );

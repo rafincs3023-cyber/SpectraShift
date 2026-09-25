@@ -205,7 +205,7 @@ export function SpectralSpectrumChart({
                 Wavelength (µm)
               </text>
               <text x={-IH / 2} y={-50} className="spectrum-axis-label" textAnchor="middle" transform="rotate(-90)">
-                Surface brightness ({unit ?? "unknown unit"})
+                Brightness ({unit ?? "unknown unit"})
               </text>
 
               <rect
@@ -246,13 +246,13 @@ export function SpectralSpectrumChart({
 
       <div className="spectral-chart-legend">
         <span>
-          <i className="legend-line" /> Valid sample ({valid.length})
+          <i className="legend-line" /> Brightness measured ({valid.length} wavelengths)
         </span>
         <span>
-          <i className="legend-null" /> No data / non-finite ({plotted.length - valid.length}) — shown as a gap, never as zero
+          <i className="legend-null" /> No data ({plotted.length - valid.length}) — shown as a gap, not as zero
         </span>
         <span>
-          <i className="legend-selected" /> Channel shown in the image
+          <i className="legend-selected" /> Wavelength shown in the image
         </span>
       </div>
     </div>

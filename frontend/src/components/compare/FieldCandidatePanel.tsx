@@ -14,13 +14,13 @@ export function FieldCandidatePanel({
 }) {
   return (
     <aside className="field-panel">
-      <h2>Candidates in this field</h2>
+      <h2>Possible moving objects here</h2>
       <p className="section-note">
         {candidates.length === 0
-          ? "No validated candidate positions fall within the currently compared epochs."
-          : `${candidates.length} candidate${
+          ? "No validated moving-object candidates appear in this view. The search rejected every possible track — see the Candidates page for why."
+          : `${candidates.length} possible moving object${
               candidates.length === 1 ? "" : "s"
-            } visible in the selected epochs.`}
+            } appear in these images.`}
       </p>
 
       <div className="field-candidate-list">

@@ -19,6 +19,10 @@ import { SpectralSpectrumChart } from "../components/spectral/SpectralSpectrumCh
 import { SelectedPositionPanel } from "../components/spectral/SelectedPositionPanel";
 import { WavelengthBar } from "../components/spectral/WavelengthBar";
 import { detectorRanges, type PixelPick } from "../components/spectral/spectralUtils";
+import { PageIntro } from "../components/ui/PageIntro";
+import { InfoTooltip } from "../components/ui/InfoTooltip";
+import { TechnicalDetails } from "../components/ui/TechnicalDetails";
+import { EmptyStateCard } from "../components/ui/EmptyStateCard";
 
 // Wait this long after the last channel change before requesting a preview
 // that isn't already loaded, so dragging the slider across many channels
@@ -211,7 +215,7 @@ export function SpectralView() {
     return (
       <div className="page">
         <SpectralHeader />
-        <LoadingState label="Loading the 102-channel spectral mosaic…" />
+        <LoadingState label="Loading the 102-wavelength sky image…" />
       </div>
     );
   }
@@ -236,28 +240,29 @@ export function SpectralView() {
 
       <div className="spectral-mode-compare">
         <div className="spectral-mode spectral-mode-active">
-          <strong>Spectral View · this page</strong>
-          <span>Same sky, same time, {metadata.total_channels} different wavelengths.</span>
+          <strong>Spectral View · you are here</strong>
+          <span>Same sky, same moment, {metadata.total_channels} different wavelengths.</span>
         </div>
         <Link to="/compare" className="spectral-mode">
           <strong>Time Compare →</strong>
-          <span>
-            Same sky observed at different times. Primary: ~6-month
-            comparison; secondary: 31-day A/C/B comparison.
-          </span>
+          <span>Same sky on different dates, to look for changes over time.</span>
         </Link>
       </div>
 
-      <section className="card spectral-channel-card" aria-label="Channel selection">
+      <section className="card spectral-channel-card" aria-label="Choose a wavelength">
         <div className="spectral-channel-top">
           <div>
-            <p className="eyebrow spectral-eyebrow">Wavelength, not time</p>
+            <p className="eyebrow spectral-eyebrow">Choose a wavelength (this changes colour, not time)</p>
             <p className="spectral-channel-title">
-              Channel <strong>{channel}</strong> / {metadata.total_channels} ·{" "}
-              <strong>{info.wavelength_um?.toFixed(3) ?? "—"} µm</strong>
+              Wavelength <strong>{info.wavelength_um?.toFixed(3) ?? "—"} µm</strong>
+              <InfoTooltip term="wavelength" />
+              <span className="spectral-channel-sub">
+                {" "}· channel {channel} of {metadata.total_channels}
+                <InfoTooltip term="channel" />
+              </span>
             </p>
           </div>
-          <span className="section-note spectral-keys">Tip: use ← / → keys to step channels</span>
+          <span className="section-note spectral-keys">Tip: use the ← / → keys to step through wavelengths</span>
         </div>
         <WavelengthBar
           channels={metadata.channels}
@@ -274,9 +279,9 @@ export function SpectralView() {
         <div className="compare-viewer">
           <div className="obs-panel">
             <div className="obs-panel-header">
-              <span className="obs-epoch-chip">Channel {channel}</span>
+              <span className="obs-epoch-chip">{info.wavelength_um?.toFixed(3) ?? "—"} µm</span>
               <span className="obs-panel-meta">
-                {info.wavelength_um?.toFixed(3) ?? "—"} µm · detector {info.detector ?? "—"}
+                Channel {channel} · detector D{info.detector ?? "—"}
               </span>
             </div>
             <SpectralImageViewer
@@ -296,24 +301,31 @@ export function SpectralView() {
               onPickOutside={() => setSpectrumError("That click was outside the image. Click on the mosaic itself.")}
             />
             <div className="obs-panel-footer">
-              <span>
-                {metadata.image.width} × {metadata.image.height} px ·{" "}
-                {metadata.image.pixel_scale_arcsec[0]?.toFixed(2) ?? "—"}″/px
-              </span>
-              <span>North up · East left · {metadata.image.unit ?? ""}</span>
+              <span>Click any point to see its spectrum</span>
+              <span>North up · East left</span>
             </div>
           </div>
           <p className="section-note">
-            Click a star or any spot on the image to see its brightness across
-            all {metadata.total_channels} channels. Transparent/black areas have
-            no data in this channel. Display: asinh stretch between the 0.5th
-            and 99.5th brightness percentiles of each channel.
+            Brighter means more infrared light at this wavelength. Dark or
+            transparent areas have no data at this wavelength.
           </p>
+          <TechnicalDetails summary="Technical details about this image">
+            <p>
+              Mosaic size {metadata.image.width} × {metadata.image.height} pixels,{" "}
+              {metadata.image.pixel_scale_arcsec[0]?.toFixed(2) ?? "—"}″ per pixel; brightness
+              unit {metadata.image.unit ?? "—"}.
+            </p>
+            <p>
+              Display only: each wavelength is shown with an asinh stretch between
+              the 0.5th and 99.5th brightness percentiles of that channel. Spectra
+              are read from the full-precision data, not from this picture.
+            </p>
+          </TechnicalDetails>
         </div>
 
         <aside className="spectral-side">
           <div className="card spectral-side-card">
-            <h2>Selected channel</h2>
+            <h2>This wavelength</h2>
             <ChannelInfo info={info} total={metadata.total_channels} />
           </div>
           <SelectedPositionPanel
@@ -328,30 +340,40 @@ export function SpectralView() {
         </aside>
       </div>
 
-      <section className="card spectral-spectrum-card" aria-label="Spectrum at selected position">
+      <section className="card spectral-spectrum-card" aria-label="Spectrum of the selected point">
         <div className="spectral-side-head">
-          <h2>Spectrum at the selected position</h2>
+          <h2>
+            Spectrum of the selected point
+            <InfoTooltip term="spectrum" />
+          </h2>
           {spectrum && (
             <span className="section-note">
-              RA {spectrum.pixel_center.ra_deg?.toFixed(4)}°, Dec {spectrum.pixel_center.dec_deg?.toFixed(4)}° ·{" "}
-              {spectrum.n_valid}/{spectrum.n_channels} valid
+              RA {spectrum.pixel_center.ra_deg?.toFixed(4)}°, Dec {spectrum.pixel_center.dec_deg?.toFixed(4)}°
             </span>
           )}
         </div>
+        <p className="section-note spectral-chart-intro">
+          This chart shows how bright the selected sky point is at each
+          wavelength, from {wlMin.toFixed(2)} µm (left) to {wlMax.toFixed(2)} µm (right).
+        </p>
 
         {!spectrum && !spectrumLoading && (
-          <div className="state-panel state-placeholder spectral-chart-empty">
-            Click a position on the image to plot its spectrum: brightness
-            (y) against wavelength from {wlMin.toFixed(2)} to {wlMax.toFixed(2)} µm (x).
-          </div>
+          <EmptyStateCard title="Click any point in the image to plot its spectrum.">
+            <p>
+              Try a bright star first: stars and galaxies usually have smooth
+              spectra, while dust and gas can show bumps at particular
+              wavelengths. You can also enter sky coordinates in the panel on
+              the right.
+            </p>
+          </EmptyStateCard>
         )}
-        {!spectrum && spectrumLoading && <LoadingState label="Reading all channels at this position…" />}
+        {!spectrum && spectrumLoading && <LoadingState label="Reading all 102 wavelengths at this point…" />}
 
         {spectrum && (
           <>
             {!spectrum.has_data && (
               <p className="spectral-inline-error">
-                None of the {spectrum.n_channels} channels has valid data at this pixel, so there is nothing to plot.
+                This point has no data at any of the {spectrum.n_channels} wavelengths, so there is nothing to plot. Try a point inside the image.
               </p>
             )}
             <SpectralSpectrumChart
@@ -364,13 +386,21 @@ export function SpectralView() {
               onSelectChannel={goTo}
             />
             <p className="section-note">
-              Each point is the value of the single nearest mosaic pixel in one
-              channel ({spectrum.unit}); nothing is interpolated or smoothed.
-              Hover to read values; click the chart to show that channel in the
-              image. Shaded bands mark SPHEREx's six detectors (D1–D6).
+              How to read it: each dot is one wavelength. Higher dots mean a
+              brighter point. Hover a dot to read its value; click the chart to
+              show that wavelength in the image. The shaded bands are SPHEREx's
+              six detectors (D1–D6)<InfoTooltip term="detector" />.
             </p>
+            <TechnicalDetails summary="Technical details about this spectrum">
+              <p>
+                Each value is the single nearest mosaic pixel (x {spectrum.pixel.x_index}, y{" "}
+                {spectrum.pixel.y_index}) in one channel, in {spectrum.unit}; nothing is
+                interpolated or smoothed. Data present in {spectrum.n_valid} of{" "}
+                {spectrum.n_channels} channels; missing values are shown as gaps, never as zero.
+              </p>
+            </TechnicalDetails>
             <details className="spectral-table-toggle">
-              <summary>Show all {spectrum.n_channels} samples as a table</summary>
+              <summary>Show all {spectrum.n_channels} values as a table</summary>
               <div className="table-scroll">
                 <table className="data-table spectrum-table">
                   <thead>
@@ -381,7 +411,7 @@ export function SpectralView() {
                       </th>
                       <th>Detector</th>
                       <th>
-                        Value <span className="unit-case">({spectrum.unit})</span>
+                        Brightness <span className="unit-case">({spectrum.unit})</span>
                       </th>
                     </tr>
                   </thead>
@@ -391,7 +421,7 @@ export function SpectralView() {
                         <td data-label="Channel">{s.channel}</td>
                         <td data-label="Wavelength (µm)">{s.wavelength_um?.toFixed(3) ?? "—"}</td>
                         <td data-label="Detector">{s.detector ?? "—"}</td>
-                        <td data-label="Value">{s.value === null ? "no data" : s.value.toPrecision(5)}</td>
+                        <td data-label="Brightness">{s.value === null ? "no data" : s.value.toPrecision(5)}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -403,10 +433,8 @@ export function SpectralView() {
       </section>
 
       <p className="disclaimer">
-        Real SPHEREx spectral mosaic data ({metadata.sources.map((s) => s.file).join(", ")}), served as
-        previews and per-pixel samples by the SpectraShift backend. Changing
-        channels changes the wavelength being viewed, not the time of
-        observation, so differences between channels are not motion.
+        Real SPHEREx data. Changing the wavelength does not change the time of
+        the observation, so differences between wavelengths are not motion.
       </p>
     </div>
   );
@@ -425,15 +453,13 @@ function describeFootprint(metadata: SpectralMetadata): string | null {
 
 function SpectralHeader() {
   return (
-    <div className="page-header">
-      <p className="eyebrow">SPHEREx · 102-channel spectral mosaic</p>
-      <h1>Spectral View</h1>
-      <p className="page-subtitle">
-        Spectral View shows the same region of sky across SPHEREx's 102
-        near-infrared channels. Move through the channels to see how the sky
-        appears at different wavelengths. Click a position to inspect its
-        spectrum.
-      </p>
-    </div>
+    <PageIntro
+      eyebrow="SPHEREx · 102 infrared wavelengths"
+      title="Spectral View"
+      lead="See the same patch of sky across 102 infrared wavelengths."
+      what="Shows one sky region at 102 wavelengths — the same moment, seen in different “colours” of infrared light."
+      how="Move through wavelengths with the slider or arrow keys, then click the image to pick a point."
+      result="The chart shows how bright that point is at each wavelength (its spectrum). This page changes wavelength, not observation time."
+    />
   );
 }

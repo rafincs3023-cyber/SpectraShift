@@ -4,6 +4,7 @@ import { StatusBadge } from "../StatusBadge";
 import { LoadingState } from "../LoadingState";
 import { ErrorState } from "../ErrorState";
 import { SpectrumChart } from "./SpectrumChart";
+import { InfoTooltip } from "../ui/InfoTooltip";
 
 function fmt(value: number | null | undefined, digits = 2): string {
   if (value === null || value === undefined || Number.isNaN(value)) return "—";
@@ -42,11 +43,10 @@ export function SelectedSourcePanel({
   if (!detail) {
     return (
       <aside className="field-panel">
-        <h2>Selected source</h2>
+        <h2>Selected object</h2>
         <p className="section-note">
-          Click a marker on the sky viewer to inspect a candidate source:
-          its RA/Dec, real per-epoch spectral samples, catalogue
-          cross-match status, and motion.
+          Nothing selected. When markers are shown on the image, click one to
+          see its sky position, brightness, catalogue check and motion here.
         </p>
       </aside>
     );
@@ -66,37 +66,46 @@ export function SelectedSourcePanel({
         <StatusBadge status={detail.catalogue.final_catalogue_status} />
       </div>
       <p className="section-note">
-        Preliminary, unconfirmed candidate — not a confirmed object.
+        A possible moving object — not a confirmed discovery.
       </p>
 
-      <h2>Position (Epoch {epoch})</h2>
+      <h2>Position on this date (Epoch {epoch})</h2>
       <dl className="kv-list kv-list-compact">
         <div>
-          <dt>RA</dt>
+          <dt>
+            RA
+            <InfoTooltip term="ra" />
+          </dt>
           <dd>{fmt(pos.ra_deg, 6)}°</dd>
         </div>
         <div>
-          <dt>Dec</dt>
+          <dt>
+            Dec
+            <InfoTooltip term="dec" />
+          </dt>
           <dd>{fmt(pos.dec_deg, 6)}°</dd>
         </div>
         <div>
-          <dt>Flux (this epoch)</dt>
+          <dt>
+            Brightness (flux)
+            <InfoTooltip term="brightness" />
+          </dt>
           <dd>{fmt(pos.flux, 3)}</dd>
         </div>
       </dl>
 
-      <h2>Motion &amp; brightness</h2>
+      <h2>How it moved</h2>
       <dl className="kv-list kv-list-compact">
         <div>
-          <dt>Apparent motion (A→B)</dt>
+          <dt>Distance moved (first → last date)</dt>
           <dd>{fmt(detail.motion.total_motion_arcsec, 1)}″</dd>
         </div>
         <div>
-          <dt>Motion rate</dt>
-          <dd>{fmt(detail.motion.motion_arcsec_per_day, 2)}″/day</dd>
+          <dt>Speed across the sky</dt>
+          <dd>{fmt(detail.motion.motion_arcsec_per_day, 2)}″ per day</dd>
         </div>
         <div>
-          <dt>Flux variation (CV)</dt>
+          <dt>Brightness variation (CV)</dt>
           <dd>{fmt(detail.validation.flux_variation, 3)}</dd>
         </div>
         <div>
@@ -105,7 +114,7 @@ export function SelectedSourcePanel({
         </div>
       </dl>
 
-      <h2>Catalogue match</h2>
+      <h2>Catalogue check</h2>
       {detail.catalogue.best_match_catalogue ? (
         <dl className="kv-list kv-list-compact">
           <div>
@@ -121,19 +130,27 @@ export function SelectedSourcePanel({
             <dd>{fmt(detail.catalogue.best_match_separation_arcsec, 2)}″</dd>
           </div>
           <div>
-            <dt>Status</dt>
-            <dd>{detail.catalogue.final_catalogue_status ?? "—"}</dd>
+            <dt>Result</dt>
+            <dd>
+              <StatusBadge status={detail.catalogue.final_catalogue_status} />
+            </dd>
           </div>
         </dl>
       ) : (
-        <p className="section-note">No catalogue coincidence on record.</p>
+        <p className="section-note">No catalogue match on record.</p>
       )}
 
-      <h2>Spectrum (flux vs. wavelength)</h2>
+      <h2>
+        Brightness at each wavelength sampled
+        <InfoTooltip
+          label="Why only a few wavelengths?"
+          text="On each date SPHEREx measured this spot at one wavelength only, so there is at most one point per date — not a full spectrum."
+        />
+      </h2>
       {spectrum ? (
         <SpectrumChart points={spectrum.points} />
       ) : (
-        <p className="section-note">No spectral data available.</p>
+        <p className="section-note">Not available for this object.</p>
       )}
     </aside>
   );

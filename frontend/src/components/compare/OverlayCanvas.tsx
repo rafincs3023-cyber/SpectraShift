@@ -108,12 +108,11 @@ export function OverlayCanvas({
         {error && <div className="overlay-loading overlay-error">{error}</div>}
       </div>
       <p className="section-note">
-        Overlay visualization: {epochA.label ?? `Epoch ${epochA.epoch}`} in
-        red, {epochB.label ?? `Epoch ${epochB.epoch}`} in cyan. Unchanged sources appear pale/white; a
-        red-only or cyan-only point indicates apparent brightness or
-        position change between the two epochs. This is a visual
-        observation-comparison rendering, not a new derived scientific
-        product.
+        {epochA.label ?? `Epoch ${epochA.epoch}`} is shown in red and{" "}
+        {epochB.label ?? `Epoch ${epochB.epoch}`} in cyan. Unchanged stars look
+        white; a red-only or cyan-only spot shows an apparent change in
+        brightness or position between the two dates. This is a viewing aid,
+        not a new measurement.
       </p>
     </div>
   );

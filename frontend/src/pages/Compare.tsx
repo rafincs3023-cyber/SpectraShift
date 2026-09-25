@@ -22,14 +22,23 @@ import {
   type CompareMode,
 } from "../components/compare/compareModes";
 import { SixMonthCompare } from "../components/compare/SixMonthCompare";
+import { DifferenceLegend } from "../components/compare/DifferenceLegend";
+import { PageIntro } from "../components/ui/PageIntro";
+import { InfoTooltip } from "../components/ui/InfoTooltip";
 
 type Dataset = "6month" | "31day";
 
 // Real SPHEREx header note (DETECTOR keyword comment): "1-3: SWIR, 4-6: MWIR"
 function detectorLabel(detector: number | null | undefined): string {
   if (detector === null || detector === undefined) return "Unknown";
-  const band = detector <= 3 ? "SWIR" : "MWIR";
+  const band = detector <= 3 ? "short-wave infrared" : "mid-wave infrared";
   return `Detector ${detector} (${band})`;
+}
+
+function shortDate(iso: string | null | undefined): string {
+  if (!iso) return "unknown date";
+  const d = new Date(/[zZ]|[+-]\d\d:?\d\d$/.test(iso) ? iso : `${iso}Z`);
+  return d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric", timeZone: "UTC" });
 }
 
 /** Time Compare: the ~6-month pair is the primary/default dataset; the
@@ -55,18 +64,18 @@ export function Compare() {
 
   return (
     <div className="page compare-page">
-      <div className="page-header">
-        <h1>Time Compare</h1>
-        <p className="page-subtitle">
-          Compare real SPHEREx observations of the same sky taken at different
-          times and inspect apparent change.
-        </p>
-      </div>
+      <PageIntro
+        eyebrow="SPHEREx · Same sky, different dates"
+        title="Time Compare"
+        lead="Compare the same area of sky at different observation dates."
+        what="Shows two real SPHEREx images of the same sky, taken on different dates and lined up exactly."
+        how="Pick a comparison below, then switch between the viewing modes (side by side, slider, blink, difference, overlay)."
+        result="Anything that looks different may have changed or moved — but a visible difference does not automatically mean a moving object."
+      />
 
       <div className="view-scope-note">
-        <strong>Time Compare</strong> = changes between observation times
-        (same sky, different dates). <strong>Spectral View</strong> = changes
-        across wavelength (same sky, 102 wavelength channels) —{" "}
+        <strong>Time Compare</strong> = same sky, <em>different dates</em>.{" "}
+        <strong>Spectral View</strong> = same sky, <em>different wavelengths</em> —{" "}
         <Link to="/spectral">open Spectral View</Link>.
       </div>
 
@@ -79,9 +88,9 @@ export function Compare() {
           onClick={() => selectDataset("6month")}
         >
           <span className="dataset-tab-title">
-            ~6-Month Compare <span className="dataset-tab-badge">Primary</span>
+            ~6-Month Compare <span className="dataset-tab-badge">Recommended</span>
           </span>
-          <span className="dataset-tab-sub">Jun 19, 2025 → Dec 17, 2025 · 181.8-day baseline</span>
+          <span className="dataset-tab-sub">Two images about 6 months apart · Jun 19 → Dec 17, 2025</span>
         </button>
         <button
           type="button"
@@ -91,10 +100,10 @@ export function Compare() {
           onClick={() => selectDataset("31day")}
         >
           <span className="dataset-tab-title">
-            Short-Baseline / 31-Day Compare{" "}
-            <span className="dataset-tab-badge dataset-tab-badge-muted">Secondary</span>
+            31-Day Compare{" "}
+            <span className="dataset-tab-badge dataset-tab-badge-muted">Short gap</span>
           </span>
-          <span className="dataset-tab-sub">Epochs A / C / B · May 9 → Jun 9, 2025</span>
+          <span className="dataset-tab-sub">Three images within one month · May 9, May 27 and Jun 9, 2025</span>
         </button>
       </div>
 
@@ -152,7 +161,7 @@ function ShortBaselineCompare({
       // chosen in the other one), but guard against a stuck spinner if it
       // ever does.
       setPairLoading(false);
-      setPairError("Observation A and Observation B must be different epochs.");
+      setPairError("Choose two different observation dates to compare.");
       return;
     }
 
@@ -211,6 +220,21 @@ function ShortBaselineCompare({
     return [...seen.entries()];
   }, [observations]);
 
+  const dateOf = (epoch: EpochLabel) =>
+    shortDate(observations?.find((o) => o.epoch === epoch)?.date_obs);
+
+  // "Earlier image · May 9, 2025"-style labels, ordered by observation time
+  const labelled = useMemo(() => {
+    if (!pair) return null;
+    const mjdA = pair.epoch_a.observation?.mjd_obs ?? 0;
+    const mjdB = pair.epoch_b.observation?.mjd_obs ?? 0;
+    const tag = (earlier: boolean) => (earlier ? "Earlier image" : "Later image");
+    return {
+      a: { ...pair.epoch_a, label: `${tag(mjdA <= mjdB)} · ${shortDate(pair.epoch_a.observation?.date_obs)}` },
+      b: { ...pair.epoch_b, label: `${tag(mjdB < mjdA)} · ${shortDate(pair.epoch_b.observation?.date_obs)}` },
+    };
+  }, [pair]);
+
   const fieldCandidateIds = useMemo(() => {
     const ids = new Set<string>();
     markersA.forEach((m) => ids.add(m.candidate_id));
@@ -225,7 +249,7 @@ function ShortBaselineCompare({
 
   if (loading) {
     return (
-      <LoadingState label="Loading observations…" />
+      <LoadingState label="Loading the observation dates…" />
     );
   }
 
@@ -238,21 +262,20 @@ function ShortBaselineCompare({
   return (
     <>
       <p className="section-note">
-        Compare real SPHEREx sky observations across epochs and inspect
-        apparent change. Live data from <code>GET /api/observations</code>{" "}
-        and <code>GET /api/compare/*</code>.
+        Three SPHEREx images of the same field taken within one month. Pick
+        any two dates to compare.
       </p>
 
       <div className="compare-controls">
         <label className="control-field">
-          <span>Observation A</span>
+          <span>First image (date)</span>
           <select
             value={epochA}
             onChange={(e) => setEpochA(e.target.value as EpochLabel)}
           >
             {observations.map((o) => (
               <option key={o.epoch} value={o.epoch} disabled={o.epoch === epochB}>
-                Epoch {o.epoch} — {o.date_obs?.slice(0, 10) ?? "unknown date"}
+                {shortDate(o.date_obs)} (Epoch {o.epoch})
               </option>
             ))}
           </select>
@@ -262,27 +285,30 @@ function ShortBaselineCompare({
           type="button"
           className="btn btn-secondary swap-btn"
           onClick={swapEpochs}
-          title="Swap Observation A and B"
+          title="Swap the two images"
         >
           ⇄ Swap
         </button>
 
         <label className="control-field">
-          <span>Observation B</span>
+          <span>Second image (date)</span>
           <select
             value={epochB}
             onChange={(e) => setEpochB(e.target.value as EpochLabel)}
           >
             {observations.map((o) => (
               <option key={o.epoch} value={o.epoch} disabled={o.epoch === epochA}>
-                Epoch {o.epoch} — {o.date_obs?.slice(0, 10) ?? "unknown date"}
+                {shortDate(o.date_obs)} (Epoch {o.epoch})
               </option>
             ))}
           </select>
         </label>
 
         <label className="control-field">
-          <span>Band</span>
+          <span>
+            Wavelength band
+            <InfoTooltip term="detector" />
+          </span>
           <select disabled value={availableBands[0]?.[0] ?? ""}>
             {availableBands.length === 0 && <option>No band data</option>}
             {availableBands.map(([detector, label]) => (
@@ -295,9 +321,8 @@ function ShortBaselineCompare({
       </div>
       {availableBands.length <= 1 && (
         <p className="section-note band-note">
-          Only one detector/band was downloaded for this project (
-          {availableBands[0]?.[1] ?? "none"}); the band selector reflects
-          the real available data only.
+          Only one wavelength band is available for these images (
+          {availableBands[0]?.[1] ?? "none"}).
         </p>
       )}
 
@@ -306,7 +331,7 @@ function ShortBaselineCompare({
       {pairLoading && <LoadingState label="Loading comparison…" />}
       {!pairLoading && pairError && <ErrorState message={pairError} />}
 
-      {!pairLoading && !pairError && pair && (
+      {!pairLoading && !pairError && pair && labelled && (
         <>
           {!pair.pixel_aligned && (
             <p className="alignment-note">{pair.alignment_note}</p>
@@ -316,15 +341,15 @@ function ShortBaselineCompare({
             <div className="compare-viewer">
               {mode === "side-by-side" && (
                 <div className="side-by-side-grid">
-                  <ObservationPanel side={pair.epoch_a} markers={markersA} />
-                  <ObservationPanel side={pair.epoch_b} markers={markersB} />
+                  <ObservationPanel side={labelled.a} markers={markersA} />
+                  <ObservationPanel side={labelled.b} markers={markersB} />
                 </div>
               )}
 
               {mode === "slider" && (
                 <SliderCompare
-                  epochA={pair.epoch_a}
-                  epochB={pair.epoch_b}
+                  epochA={labelled.a}
+                  epochB={labelled.b}
                   markersA={markersA}
                   markersB={markersB}
                 />
@@ -332,8 +357,8 @@ function ShortBaselineCompare({
 
               {mode === "blink" && (
                 <BlinkCompare
-                  epochA={pair.epoch_a}
-                  epochB={pair.epoch_b}
+                  epochA={labelled.a}
+                  epochB={labelled.b}
                   markersA={markersA}
                   markersB={markersB}
                 />
@@ -345,13 +370,21 @@ function ShortBaselineCompare({
                   previewUrl={pair.difference_preview_url}
                   epochA={pair.epoch_a.epoch}
                   epochB={pair.epoch_b.epoch}
+                  alt={`Earlier image (${dateOf("A")}) minus later image (${dateOf("B")})`}
+                  caption={
+                    <DifferenceLegend
+                      formula={`Earlier image − Later image (Epoch A − Epoch B, ${dateOf("A")} − ${dateOf("B")})`}
+                      red={`brighter in the earlier image (${dateOf("A")})`}
+                      blue={`brighter in the later image (${dateOf("B")})`}
+                    />
+                  }
                 />
               )}
 
               {mode === "overlay" && (
                 <OverlayCanvas
-                  epochA={pair.epoch_a}
-                  epochB={pair.epoch_b}
+                  epochA={labelled.a}
+                  epochB={labelled.b}
                   markers={markersA}
                 />
               )}
@@ -363,8 +396,8 @@ function ShortBaselineCompare({
       )}
 
       <p className="disclaimer">
-        Markers show preliminary, unconfirmed three-epoch motion candidates.
-        Apparent change shown here is not a confirmed discovery.
+        Markers (if any) show possible moving objects that passed every check.
+        Any change shown here is an apparent change, not a confirmed discovery.
       </p>
     </>
   );

@@ -1,5 +1,7 @@
 import { useState } from "react";
 import type { SpectralChannel } from "../../api/spectral";
+import { InfoTooltip } from "../ui/InfoTooltip";
+import { TechnicalDetails } from "../ui/TechnicalDetails";
 
 function fmt(value: number | null | undefined, digits = 3): string {
   if (value === null || value === undefined || Number.isNaN(value)) return "—";
@@ -41,7 +43,7 @@ export function ChannelControls({
         disabled={channel <= 1}
         aria-label="Previous channel (shorter wavelength)"
       >
-        ‹ Prev
+        ‹ Shorter
       </button>
 
       <input
@@ -52,7 +54,7 @@ export function ChannelControls({
         step={1}
         value={channel}
         onChange={(e) => onChange(Number(e.target.value))}
-        aria-label="Spectral channel"
+        aria-label="Wavelength channel"
         aria-valuetext={`Channel ${channel} of ${total}`}
       />
 
@@ -63,7 +65,7 @@ export function ChannelControls({
         disabled={channel >= total}
         aria-label="Next channel (longer wavelength)"
       >
-        Next ›
+        Longer ›
       </button>
 
       <label className="channel-jump">
@@ -111,38 +113,63 @@ export function ChannelInfo({
       </div>
       <dl className="kv-list kv-list-compact">
         <div>
-          <dt>Detector</dt>
-          <dd>{info.detector ?? "—"}</dd>
-        </div>
-        <div>
-          <dt>Subchannel</dt>
-          <dd>{info.subchannel ?? "—"}</dd>
-        </div>
-        <div>
           <dt>Wavelength range</dt>
           <dd>
             {fmt(info.wavelength_min_um)} – {fmt(info.wavelength_max_um)} µm
           </dd>
         </div>
         <div>
-          <dt>Bandwidth</dt>
-          <dd>{fmt(info.bandwidth_um)} µm</dd>
+          <dt>
+            Detector
+            <InfoTooltip term="detector" />
+          </dt>
+          <dd>D{info.detector ?? "—"} of 6</dd>
         </div>
         <div>
-          <dt>Sky coverage</dt>
+          <dt>Image area with data</dt>
           <dd>
             {info.coverage_fraction === null
               ? "—"
-              : `${(info.coverage_fraction * 100).toFixed(2)}%`}
-          </dd>
-        </div>
-        <div>
-          <dt>Source</dt>
-          <dd className="channel-info-source" title={info.source_file}>
-            plane {info.source_plane} of {info.source_file.replace(/\.fits\.gz$/, "")}
+              : `${(info.coverage_fraction * 100).toFixed(1)}%`}
           </dd>
         </div>
       </dl>
+      <TechnicalDetails>
+        <dl className="kv-list kv-list-compact">
+          <div>
+            <dt>Channel</dt>
+            <dd>
+              {info.channel} of {total}
+            </dd>
+          </div>
+          <div>
+            <dt>Centre wavelength</dt>
+            <dd>{info.wavelength_um ?? "—"} µm</dd>
+          </div>
+          <div>
+            <dt>Bandwidth</dt>
+            <dd>{fmt(info.bandwidth_um)} µm</dd>
+          </div>
+          <div>
+            <dt>Subchannel</dt>
+            <dd>{info.subchannel ?? "—"}</dd>
+          </div>
+          <div>
+            <dt>Sky coverage (finite pixels)</dt>
+            <dd>
+              {info.coverage_fraction === null
+                ? "—"
+                : `${(info.coverage_fraction * 100).toFixed(2)}%`}
+            </dd>
+          </div>
+          <div>
+            <dt>Source</dt>
+            <dd className="channel-info-source" title={info.source_file}>
+              plane {info.source_plane} of {info.source_file.replace(/\.fits\.gz$/, "")}
+            </dd>
+          </div>
+        </dl>
+      </TechnicalDetails>
     </div>
   );
 }

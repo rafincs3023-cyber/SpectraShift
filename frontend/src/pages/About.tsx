@@ -1,87 +1,131 @@
+import { Link } from "react-router-dom";
+import { PageIntro } from "../components/ui/PageIntro";
+import { TechnicalDetails } from "../components/ui/TechnicalDetails";
+
 export function About() {
   return (
     <div className="page">
-      <div className="page-header">
-        <h1>About SpectraShift</h1>
-        <p className="page-subtitle">
-          A SPHEREx Spectral &amp; Multi-Epoch Sky Explorer — built for the
-          NASA Space Apps 2026 "Planet X and SPHEREx" challenge.
-        </p>
+      <PageIntro
+        eyebrow="NASA Space Apps 2026 · “Planet X and SPHEREx”"
+        title="About SpectraShift"
+        lead="SpectraShift is a SPHEREx sky explorer: it lets anyone look at real NASA infrared data across wavelength and across time, and shows the result of a careful search for moving objects."
+      />
+
+      <div className="card-grid-2">
+        <section className="card">
+          <h2>What SpectraShift does</h2>
+          <ul className="plain-list">
+            <li>
+              <strong>Spectral View</strong> — one patch of sky in 102
+              infrared wavelengths, with the spectrum of any point you click.
+            </li>
+            <li>
+              <strong>Time Compare</strong> — the same sky on two dates, lined
+              up exactly, to spot changes.
+            </li>
+            <li>
+              <strong>Explore</strong> — browse a single observation.
+            </li>
+            <li>
+              <strong>Possible moving objects</strong> — the results of a
+              search for objects that move between three observations.
+            </li>
+          </ul>
+        </section>
+
+        <section className="card">
+          <h2>The data</h2>
+          <p>
+            All images are real data from NASA's SPHEREx mission, an infrared
+            space telescope that maps the whole sky in 102 wavelengths
+            (about 0.75 to 5 µm). The data come from NASA/IPAC's IRSA archive
+            (SPHEREx Quick Release, DOI 10.26131/IRSA652).
+          </p>
+          <ul className="plain-list">
+            <li>A 102-wavelength mosaic of one 5° × 4.25° sky region.</li>
+            <li>Two images of the same field about 6 months apart (Jun 19 and Dec 17, 2025).</li>
+            <li>Three images of one field within a month (May 9 – Jun 9, 2025).</li>
+          </ul>
+        </section>
+
+        <section className="card">
+          <h2>Wavelength vs time</h2>
+          <p>
+            <strong>Spectral View</strong> compares <em>wavelengths</em>: the
+            same sky at the same moment, seen in different “colours” of
+            infrared light. Differences there come from what the objects are
+            made of and how hot they are — not from motion.
+          </p>
+          <p>
+            <strong>Time Compare</strong> compares <em>dates</em>: the same sky
+            and wavelength on different days. Differences there can come from
+            changes over time, including motion.
+          </p>
+        </section>
+
+        <section className="card">
+          <h2>How the moving-object search works</h2>
+          <ol className="steps-list">
+            <li>Find every star-like source in three images taken within a month.</li>
+            <li>Link sources that could be one object moving in a straight line.</li>
+            <li>Reject tracks made of stationary stars, blended sources or bright-star glare.</li>
+            <li>Check anything left against catalogues of stars, galaxies, asteroids and comets.</li>
+          </ol>
+          <p>
+            In the current data every possible track was rejected, so no
+            candidate is listed. <Link to="/candidates">See the result →</Link>
+          </p>
+        </section>
+
+        <section className="card">
+          <h2>Limitations</h2>
+          <ul className="plain-list">
+            <li>One sky region; Time Compare uses a single detector.</li>
+            <li>
+              An empty result does not mean nothing moves here: in this crowded
+              field the search recovers only part of the moving objects it is
+              tested on.
+            </li>
+            <li>The search looks for straight-line motion over one month only.</li>
+            <li>
+              The two ~6-month images differ very slightly in wavelength, so a
+              difference is an apparent change, not proof of a physical one.
+            </li>
+          </ul>
+        </section>
+
+        <section className="card">
+          <h2>What this project is not</h2>
+          <p>
+            Nothing here is a confirmed discovery. No object is called
+            “Planet X”, a new planet or a confirmed moving object. A candidate
+            that no catalogue matches is “unmatched after checks”, which does
+            not mean “unknown” or “new”.
+          </p>
+        </section>
       </div>
 
-      <div className="card">
-        <h2>Challenge Goal</h2>
-        <p>
-          SpectraShift is a public-facing SPHEREx sky explorer: a way to
-          browse real spectral sky imagery and compare observations of the
-          same field across time, to see what appears to change or move
-          between epochs.
-        </p>
-      </div>
-
-      <div className="card">
-        <h2>How SpectraShift Works</h2>
-        <p>
-          Explore the sky → click a source → inspect its spectrum and
-          catalogue context → compare two epochs directly → inspect the
-          full evidence behind any motion candidate.
-        </p>
-      </div>
-
-      <div className="card">
-        <h2>Data &amp; Provenance</h2>
-        <p>
-          Imagery is from the SPHEREx mission, Quick Release 2 (QR2),
-          DOI 10.26131/IRSA652, accessed via IRSA (hosted on AWS).
-        </p>
-      </div>
-
-      <div className="card">
-        <h2>What this is</h2>
-        <p>
-          This project processes multi-epoch SPHEREx imagery to detect
-          sources that move across three observation epochs (A → C → B),
-          validates that motion scientifically (trajectory consistency,
-          motion-rate consistency, flux consistency, and epoch-C position
-          prediction error), and cross-matches each candidate against Gaia
-          DR3, SIMBAD, and available Solar System object catalogues. Before
-          any track is accepted, a stationary-source veto rejects tracks
-          built from sources that stay at the same sky position in the other
-          epochs, and blend / bright-star-halo mislinks. In the current run
-          every linked track was rejected by these checks, so the candidate
-          list is empty — which does not mean that no moving sources exist
-          in the field.
-        </p>
-      </div>
-
-      <div className="card">
-        <h2>Scientific Limitations</h2>
-        <p>
-          Catalogue classification propagates Gaia DR3 and SIMBAD positions
-          to each SPHEREx observation epoch with their catalogued proper
-          motions and tests every association against the combined SPHEREx +
-          catalogue positional uncertainty. The known asteroid and comet
-          search uses the JPL Small-Body Identification service, with
-          positions computed from the SPHEREx spacecraft itself; SkyBoT and
-          the MPC Checker were unreachable and are not relied on. The
-          statuses describe only these checks —{" "}
-          <code>UNMATCHED_AFTER_CHECKS</code> and <code>UNCERTAIN</code> do
-          not mean "unknown" or "a new planet."
-        </p>
-      </div>
-
-      <div className="card">
-        <h2>What this is not</h2>
-        <p>
-          Nothing produced by this pipeline is a confirmed discovery. A
-          candidate is not "Planet X," a new planet, or a confirmed unknown
-          object. Catalogue status only ever reflects one of three
-          outcomes: a match found in the checks actually performed
-          (<code>KNOWN_OBJECT</code>), no match in the checks actually
-          performed (<code>UNMATCHED_AFTER_CHECKS</code>), or evidence that
-          is incomplete, ambiguous or inconsistent (<code>UNCERTAIN</code>).
-        </p>
-      </div>
+      <section className="card">
+        <h2>Technical notes</h2>
+        <TechnicalDetails summary="How catalogue checks and statuses work">
+          <p>
+            Catalogue classification propagates Gaia DR3 and SIMBAD positions
+            to each SPHEREx observation date using their catalogued proper
+            motions, and tests every association against the combined SPHEREx
+            and catalogue positional uncertainty. The known asteroid and comet
+            search uses the JPL Small-Body Identification service, with
+            positions computed from the SPHEREx spacecraft itself; SkyBoT and
+            the MPC Checker were unreachable and are not relied on.
+          </p>
+          <p>
+            Each candidate gets exactly one status:{" "}
+            <code>KNOWN_OBJECT</code> (a strong match in the checks
+            performed), <code>UNMATCHED_AFTER_CHECKS</code> (every required
+            check ran and none matched) or <code>UNCERTAIN</code> (evidence
+            incomplete, ambiguous or inconsistent).
+          </p>
+        </TechnicalDetails>
+      </section>
     </div>
   );
 }

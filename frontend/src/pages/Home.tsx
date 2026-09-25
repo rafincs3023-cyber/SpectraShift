@@ -1,66 +1,76 @@
 import { Link } from "react-router-dom";
 
+const FEATURES = [
+  {
+    to: "/spectral",
+    title: "Spectral View",
+    tag: "Across wavelength",
+    text: "See one patch of sky in 102 infrared wavelengths. Click any point to see how its brightness changes with wavelength.",
+  },
+  {
+    to: "/compare",
+    title: "Time Compare",
+    tag: "Across time",
+    text: "Compare the same sky on two dates, about 6 months apart. Use side by side, slider, blink or difference views to spot changes.",
+  },
+  {
+    to: "/explore",
+    title: "Explore",
+    tag: "One observation",
+    text: "Browse a single SPHEREx image. Zoom in and pan around the star field.",
+  },
+];
+
 export function Home() {
   return (
     <div className="page">
       <section className="hero-panel">
-        <p className="eyebrow">NASA SPHEREx · Spectral &amp; Multi-Epoch Sky Explorer</p>
+        <p className="eyebrow">NASA SPHEREx · Real sky data</p>
         <h1>Explore the same sky across wavelength and time</h1>
         <p className="hero-lead">
-          SpectraShift works directly on real SPHEREx data. Spectral View steps
-          through 102 near-infrared wavelength channels of one sky region;
-          Time Compare lines up observations of the same sky taken months
-          apart to reveal apparent change; and a three-epoch pipeline searches
-          for moving sources while rejecting stationary-star and blend false
-          positives. Every result here is preliminary.
+          SpectraShift helps you explore real SPHEREx sky data across
+          wavelength and time.
         </p>
         <div className="hero-actions">
           <Link to="/spectral" className="btn btn-primary">
-            Open Spectral View
+            Explore wavelengths
           </Link>
-          <Link to="/compare" className="btn btn-secondary">
-            Open Time Compare
+          <Link to="/compare" className="btn btn-primary">
+            Compare dates
           </Link>
-          <Link to="/about" className="btn btn-secondary">
-            About this project
+          <Link to="/help" className="btn btn-secondary">
+            How to use it
           </Link>
         </div>
       </section>
 
-      <section className="feature-grid">
-        <Link to="/spectral" className="feature-card">
-          <h2>Spectral View</h2>
-          <p>
-            Same sky, same time, 102 wavelengths (0.74–5.01 µm). Change
-            channels and click any position for its spectrum.
-          </p>
-        </Link>
-        <Link to="/compare" className="feature-card">
-          <h2>Time Compare</h2>
-          <p>
-            Same sky at different times: a registered ~6-month pair (Jun → Dec
-            2025) plus a 31-day A/C/B set, in side-by-side, slider, blink,
-            difference and overlay modes.
-          </p>
-        </Link>
-        <Link to="/explore" className="feature-card">
-          <h2>Explore</h2>
-          <p>Browse one SPHEREx epoch at a time with zoom and pan.</p>
-        </Link>
-        <Link to="/candidates" className="feature-card">
-          <h2>Candidates</h2>
-          <p>
-            Three-epoch motion-candidate pipeline results after the
-            stationary-source and blend vetoes, live from the API.
-          </p>
-        </Link>
+      <h2 className="home-section-title">What you can do</h2>
+      <section className="feature-grid feature-grid-3">
+        {FEATURES.map((f) => (
+          <Link key={f.to} to={f.to} className="feature-card">
+            <span className="feature-tag">{f.tag}</span>
+            <h2>{f.title}</h2>
+            <p>{f.text}</p>
+            <span className="feature-cta">Open {f.title} →</span>
+          </Link>
+        ))}
       </section>
 
+      <Link to="/candidates" className="feature-card feature-card-wide">
+        <span className="feature-tag">Search result</span>
+        <h2>Possible moving objects</h2>
+        <p>
+          We searched three observation dates for objects that move across
+          the sky. See what the search found, and why each possible track was
+          kept or rejected.
+        </p>
+        <span className="feature-cta">See the results →</span>
+      </Link>
+
       <p className="disclaimer">
-        No candidate on this site is labelled a discovery, Planet X, or a
-        confirmed new object. Catalogue status is always one of{" "}
-        <code>KNOWN_OBJECT</code>, <code>UNMATCHED_AFTER_CHECKS</code>, or{" "}
-        <code>UNCERTAIN</code>.
+        SpectraShift shows real NASA data and preliminary analysis. It does not
+        claim any new discovery: nothing here is labelled Planet X, a new
+        planet or a confirmed moving object.
       </p>
     </div>
   );
