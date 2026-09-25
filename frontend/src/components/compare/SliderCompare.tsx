@@ -14,8 +14,8 @@ export function SliderCompare({
   markersA: CandidateMarker[];
   markersB: CandidateMarker[];
 }) {
-  const labelA = epochA.label ?? `Epoch ${epochA.epoch}`;
-  const labelB = epochB.label ?? `Epoch ${epochB.epoch}`;
+  const labelA = epochA.label ?? (epochA.epoch === "A" ? "Earlier image" : "Later image");
+  const labelB = epochB.label ?? (epochB.epoch === "A" ? "Earlier image" : "Later image");
   const [position, setPosition] = useState(50); // percent, 0 = all A, 100 = all B
   const containerRef = useRef<HTMLDivElement>(null);
   const dragging = useRef(false);

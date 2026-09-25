@@ -13,7 +13,8 @@ their pixels are not the image grid and cannot be pixel-registered for the
 Slider / Blink / Overlay modes. They are still served, unchanged, under
 /figure/{name} as reference figures.
 
-Independent of the A/C/B 31-day routes in main.py; reads none of their data.
+This pair is the only multi-date data the product uses; the two-epoch
+candidate routes (candidates_api.py) are built on the same products.
 """
 
 import json
@@ -201,8 +202,7 @@ def _dataset() -> dict[str, Any]:
             "wavelength_um": epoch_meta.get("wavelength_um"),
             "psf_fwhm_arcsec": src.get("PSF_FWHM") if src is not None else None,
             "source_file": epoch_meta.get("file"),
-            # Same shape as the 31-day Observation records so the existing
-            # Compare panels can render it unchanged.
+            # Observation record shared by the Compare and Explore panels.
             "observation": {
                 "epoch": key,
                 "filename": EPOCH_FITS[key].name,
@@ -245,7 +245,8 @@ def _dataset() -> dict[str, Any]:
         "overlap_pixels": overlap_pixels,
         "pixel_aligned": True,
         "alignment_note": (
-            "Epoch B was reprojected onto Epoch A's pixel grid. Every view "
+            "The later image (Dec 17) was reprojected onto the earlier "
+            "image's (Jun 19) pixel grid. Every view "
             "shows the same rectangle cut from that shared grid, lying "
             "entirely inside the common footprint, so this pair is "
             "pixel-registered for Slider, Blink, Overlay and Difference."

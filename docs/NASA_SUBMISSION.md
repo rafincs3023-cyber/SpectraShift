@@ -1,64 +1,89 @@
 # SpectraShift — NASA Space Apps Submission Draft
 
 **Challenge:** Planet X and SPHEREx
-**Project:** SpectraShift — A SPHEREx Spectral & Multi-Epoch Sky Explorer
+**Project:** SpectraShift, a SPHEREx spectral and ~6-month two-epoch sky explorer
+**Live:** https://spectrashift.rafincs3023.workers.dev
 
 ## Project summary
-SpectraShift is a web application that lets anyone explore real NASA SPHEREx data across wavelength and across time. Spectral View presents all 102 SPHEREx near-infrared channels of one sky region with click-to-spectrum; Time Compare shows the same sky observed 181.8 days apart, pixel-registered, in five comparison modes; and a three-epoch moving-source pipeline searches for moving objects while rejecting stationary-star, blend and catalogue false positives. In the current data no candidate passes the checks, and SpectraShift explains why rather than claiming a discovery.
+SpectraShift is a web application that lets anyone explore real NASA SPHEREx data across wavelength and across time:
+
+- **Spectral View** presents all 102 SPHEREx near-infrared channels of one sky region, with click-to-spectrum.
+- **Time Compare** shows the same sky observed on June 19 and December 17, 2025 (181.77 days apart), pixel-registered, in five comparison modes.
+- **Explore** inspects either observation.
+- **Candidates** lists possible moving-source candidates from those two dates, after measured quality checks.
+
+Candidates are preliminary and never presented as discoveries.
 
 ## Problem
-Looking for faint, distant, slowly moving Solar System bodies requires comparing the same sky at different times. In crowded fields, most apparent motion is not real: unrelated stationary stars can be linked by chance, blended sources shift their centroids, and bright-star halos create spurious detections. SPHEREx adds 102 wavelengths per position, but its data products are large FITS files that are difficult for non-specialists to explore.
+Looking for faint, distant, slowly moving bodies requires comparing the same sky at different times. In crowded fields, most apparent change is not real:
+
+- blended sources shift their centroids
+- bright-star halos and flagged or corrupted pixels create spurious detections
+- the undersampled PSF makes positions scatter
+
+SPHEREx adds 102 wavelengths per position, but its data products are large FITS files that are difficult for non-specialists to explore.
 
 ## Solution
-- **Spectral View:** browse 102 channels (0.743–5.009 µm, detectors D1–D6) of a SPHEREx mosaic, see each channel's wavelength range, bandwidth and sky coverage, and click any position for its 102-channel spectrum.
-- **Time Compare:** a verified pair of SPHEREx exposures from 2025-06-19 and 2025-12-17 (181.774 days apart, same detector D3, wavelengths within 0.0032 µm), registered onto one grid and cut to a fully valid common frame, viewable side by side, with a slider, blinking, as a B − A difference or as a colour overlay; plus a secondary 31-day, three-epoch set.
-- **Candidate pipeline:** detection in three epochs, A → C → B linking, a calibrated stationary-source veto, a blend/bright-star-halo veto, trajectory validation and catalogue classification (Gaia DR3 propagated to each epoch, SIMBAD, JPL small-body search).
+- **Spectral View:** browse 102 channels (0.743–5.009 µm, detectors D1–D6). See each channel's wavelength range and sky coverage, and click any position for its 102-channel spectrum.
+- **Time Compare:** a verified pair of SPHEREx exposures from 2025-06-19 and 2025-12-17, 181.774 days apart, on the same detector D3, with wavelengths within 0.0032 µm.
+  - Registered onto one grid and cut to a fully valid common frame.
+  - Viewable side by side, with a slider, blinking, as a Later − Earlier difference, or as a colour overlay.
+- **Two-epoch candidates:** detection in both images, cross-matching with a measured position-error model, forced photometry and conservative quality vetoes. The results are marked on the images and explained with real cutouts.
 
 ## NASA data used
 - SPHEREx Level-2 spectral images and a 102-channel SPHEREx spectral mosaic, from NASA/IPAC IRSA (SPHEREx Quick Release, DOI 10.26131/IRSA652), including the official IRSA SPHEREx Mosaic Tool.
-- JPL Small-Body Identification API and JPL Horizons (known asteroids, comets and planets, with positions computed from the SPHEREx spacecraft).
-- Supporting non-NASA catalogues: ESA Gaia DR3 and CDS SIMBAD.
+- SPHEREx Level-2 pixel-quality flags for both observations.
 
 ## How it works
-1. An offline Python pipeline reads SPHEREx FITS files (Astropy, photutils, reproject).
-2. The ~6-month pair is reprojected onto one WCS grid; the largest fully valid rectangle in the overlap mask becomes the common display frame; a B − A difference is computed.
-3. The spectral mosaic's channel table and wavelength calibration are read directly from the FITS files; previews and spectra are served on demand.
-4. For the motion search, sources are detected in three epochs, linked, and then tested in sky coordinates against an astrometric model calibrated from ~75,000 stationary source pairs. Tracks whose detections stay at the same position in other epochs, or that are built around blends and bright-star halos, are rejected with a recorded reason.
-5. Surviving tracks are validated and classified against catalogues with epoch propagation and uncertainty-aware matching.
-6. A read-only FastAPI backend serves PNG previews and JSON; a React interface presents everything. The browser never downloads FITS files.
+1. The later image is reprojected onto the earlier image's WCS grid. The largest fully valid rectangle in the overlap mask becomes the common display frame, and a Later − Earlier difference is computed.
+2. The spectral mosaic's channel table and wavelength calibration are read from the FITS files; previews and spectra are served on demand (from private R2 tiles in production).
+3. The two-epoch pipeline (`backend/two_epoch_candidates.py`) works in these steps:
+   1. Measure each image's noise and sharpness, and blur the sharper image to match the other.
+   2. Detect sources in both images with a matched filter (≥ 5σ).
+   3. Match them on the shared grid.
+   4. Fit a position-error model to the thousands of stationary matches, and treat a source as stationary within 5σ, corrected for about 6,500 trials.
+   5. Check unmatched sources with forced photometry in the other image.
+   6. Reject look-alikes: edge, SPHEREx-flagged pixels, corrupted pixels, non-star-like shape, bright-star halo, blends, poor centroid, and a change the difference image does not confirm.
+4. A read-only FastAPI backend serves PNG previews, cutouts and JSON, and a React interface presents everything. The browser never downloads FITS files.
+
+## Result
+- About 7,500 sources in the earlier image and 6,800 in the later one; 6,472 matched as stationary.
+- **11 candidates passed the current checks:**
+  - 0 possible position changes (an earlier-only source paired with a later-only source)
+  - 10 small position shifts of 3.8–9.1″, within the image blur
+  - 1 faint source seen only in the earlier image
+- The small shifts sit in the measured long tail of position errors: 141 matches lie beyond 5σ, versus 0.02 expected for Gaussian errors. They are therefore most likely blends or pixel-sampling effects, and are listed for inspection only.
 
 ## Technologies
-React 19, TypeScript, Vite, React Router; Python, FastAPI, Uvicorn, NumPy, pandas, SciPy, Astropy, photutils, reproject, astroquery, Matplotlib, Pillow; pytest and oxlint.
+- **Frontend:** React 19, TypeScript, Vite, React Router (Cloudflare Workers).
+- **Backend:** Python, FastAPI, Uvicorn, NumPy, SciPy, Astropy, Pillow, boto3 (Railway; Cloudflare R2).
+- **Testing:** pytest and oxlint.
 
 ## Innovation
-- One interface for both of SPHEREx's dimensions — wavelength and time — with a clear distinction between them.
-- A pixel-registered long-baseline comparison whose display frame is chosen from the actual overlap mask, so no invalid regions distort blink or difference views.
-- A stationary-source and blend veto calibrated on the data itself, with a measured cost to sensitivity (≈10% of genuine movers) and an injection–recovery test (43% end-to-end recovery of synthetic movers).
-- Catalogue checks that propagate Gaia positions to each observation epoch and compute small-body positions from the spacecraft's location.
+- One interface for both of SPHEREx's dimensions, wavelength and time, with a clear distinction between them.
+- A pixel-registered long-baseline comparison whose display frame comes from the actual overlap mask.
+- A two-epoch screening in which every threshold is measured from the data or derived from stated trial counts. Every rejection is counted and shown, and synthetic injection tests verify recovery and rejection.
 
 ## Impact
-SpectraShift makes SPHEREx's spectral and multi-epoch data explorable in a browser for students, educators and citizen scientists, and demonstrates a transparent search workflow in which false positives are rejected and explained instead of being presented as discoveries.
+SpectraShift makes SPHEREx's spectral and time dimensions explorable in a browser for students, educators and citizen scientists. It demonstrates a transparent screening workflow in which false positives are rejected and explained instead of being presented as discoveries.
 
 ## Challenges
-- An earlier linker version produced 22 apparent motion candidates; careful checks showed each was a chain of unrelated stationary stars, caused by linking without a stationarity test and by detection gaps from SPHEREx's undersampled PSF. We fixed the root cause and withdrew them.
-- Crowded fields and bright-star halos required new, measurable veto criteria.
-- Some Solar System services (SkyBoT, MPC Checker) were unreachable; we used the JPL Small-Body Identification service as the equivalent search.
-- Working with multi-gigabyte FITS mosaics required streaming reads and cached previews.
+- The two images differ in sharpness: the later one is reprojected, and bilinear interpolation blurs it. Without PSF matching, faint sources in the sharper image looked like disappearances.
+- Unflagged corrupted pixels in one image mimicked vanished stars; a dedicated veto was needed.
+- Position errors have longer tails than a Gaussian model predicts, so small shifts are reported with explicit caution.
 
 ## Accomplishments
-- All 102 SPHEREx channels browsable with click-to-spectrum.
+- All 102 SPHEREx channels browsable, with click-to-spectrum.
 - A verified 181.77-day registered comparison with five modes.
-- A reproducible pipeline that rejects 725 of 725 false linked tracks with logged reasons, with its sensitivity measured rather than assumed.
-- A tested backend (pytest suite) and a clean frontend build.
+- A reproducible, tested two-epoch candidate pipeline with real-pixel cutouts for every candidate.
 
 ## Lessons learned
-- In crowded fields, "no candidate" is a far more likely honest answer than a detection — and it needs to be measured and explained.
-- Instrument details (an undersampled PSF, per-pixel wavelength) change which software defaults are safe.
-- Distinguishing *apparent* change from *physical* change must be built into the interface wording.
+- Two epochs can flag changes but cannot establish motion; that limitation belongs in the interface, not just the paper.
+- Instrument details (an undersampled PSF, reprojection blur, pixel flags) decide which checks are necessary.
+- Distinguishing *apparent* change from *physical* change must be built into the wording.
 
 ## Future improvements
-- PSF-fitting photometry and deblending for higher completeness.
-- Shift-and-stack searches across more epochs for fainter movers.
-- More sky regions and all six detectors in Time Compare.
-- Wavelength-matched differencing using SPHEREx wavelength maps.
-- Public hosting with a persistent data volume for the spectral mosaic.
+- Additional epochs of the same field, to test candidates for a consistent path.
+- Catalogue checks (Gaia, SIMBAD, known Solar System bodies) for two-epoch candidates.
+- PSF-fitting photometry and deblending.
+- More sky regions and detectors.

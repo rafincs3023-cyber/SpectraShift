@@ -1,7 +1,12 @@
 import { useEffect, useState } from "react";
 import type { CSSProperties } from "react";
 import { api, ApiError, imageUrl } from "../../api/client";
-import type { SixMonthCompareResponse, SixMonthSide } from "../../api/types";
+import type {
+  CandidateMarker,
+  SixMonthCompareResponse,
+  SixMonthSide,
+  TwoEpochCandidate,
+} from "../../api/types";
 import { LoadingState } from "../LoadingState";
 import { ErrorState } from "../ErrorState";
 import { ObservationPanel } from "./ObservationPanel";
@@ -11,6 +16,7 @@ import { DifferenceView } from "./DifferenceView";
 import { OverlayCanvas } from "./OverlayCanvas";
 import { ModeTabs } from "./ModeTabs";
 import { DifferenceLegend } from "./DifferenceLegend";
+import { FieldCandidatePanel } from "./FieldCandidatePanel";
 import { InfoTooltip } from "../ui/InfoTooltip";
 import { TechnicalDetails } from "../ui/TechnicalDetails";
 import type { CompareMode } from "./compareModes";
@@ -56,6 +62,36 @@ export function SixMonthCompare({
 }) {
   const [data, setData] = useState<SixMonthCompareResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [markers, setMarkers] = useState<{ earlier: CandidateMarker[]; later: CandidateMarker[] }>({
+    earlier: [],
+    later: [],
+  });
+  const [candidates, setCandidates] = useState<TwoEpochCandidate[] | null>(null);
+  const [candidateError, setCandidateError] = useState<string | null>(null);
+  const [showMarkers, setShowMarkers] = useState(true);
+
+  // Two-epoch candidate markers are optional context: a failure here never
+  // blocks the images.
+  useEffect(() => {
+    let cancelled = false;
+    Promise.all([
+      api.getCandidateMarkers("earlier"),
+      api.getCandidateMarkers("later"),
+      api.getCandidates(),
+    ])
+      .then(([earlier, later, list]) => {
+        if (cancelled) return;
+        setMarkers({ earlier: earlier.markers, later: later.markers });
+        const shown = new Set(earlier.markers.map((m) => m.candidate_id));
+        setCandidates(list.candidates.filter((c) => shown.has(c.candidate_id)));
+      })
+      .catch((err: unknown) => {
+        if (!cancelled) setCandidateError(err instanceof ApiError ? err.message : "Unexpected error");
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
@@ -91,7 +127,10 @@ export function SixMonthCompare({
   const frameCenterText = `RA ${data.frame_center.ra_deg.toFixed(3)}° · Dec ${data.frame_center.dec_deg.toFixed(3)}°`;
   const targetNote = target.in_display_region
     ? "inside the displayed frame"
-    : `just outside the displayed frame (${target.offset_from_display_px.toFixed(0)} px ≈ ${target.offset_from_display_arcsec.toFixed(0)}″ beyond its edge, where Epoch B's footprint narrows)`;
+    : `just outside the displayed frame (${target.offset_from_display_px.toFixed(0)} px ≈ ${target.offset_from_display_arcsec.toFixed(0)}″ beyond its edge, where the later image's footprint narrows)`;
+
+  const mA = showMarkers ? markers.earlier : [];
+  const mB = showMarkers ? markers.later : [];
 
   // Frames match the displayed region's shape so nothing is cropped away.
   const frameStyle = {
@@ -115,45 +154,43 @@ export function SixMonthCompare({
       </div>
 
       <ModeTabs mode={mode} onChange={onModeChange} />
+      {markers.earlier.length > 0 && (
+        <label className="marker-toggle">
+          <input
+            type="checkbox"
+            checked={showMarkers}
+            onChange={(e) => setShowMarkers(e.target.checked)}
+          />{" "}
+          Show two-epoch candidate markers ({markers.earlier.length})
+        </label>
+      )}
 
       <div className="compare-layout compare-layout-wide">
         <div className="compare-viewer compare-viewer-wide" style={frameStyle}>
           {mode === "side-by-side" && (
             <div className="side-by-side-grid">
-              <ObservationPanel
-                side={a}
-                markers={[]}
-                showMarkers={false}
-                coordLabel="Frame center"
-              />
-              <ObservationPanel
-                side={b}
-                markers={[]}
-                showMarkers={false}
-                coordLabel="Frame center"
-              />
+              <ObservationPanel side={a} markers={mA} coordLabel="Frame center" />
+              <ObservationPanel side={b} markers={mB} coordLabel="Frame center" />
             </div>
           )}
 
           {mode === "slider" && (
-            <SliderCompare epochA={a} epochB={b} markersA={[]} markersB={[]} />
+            <SliderCompare epochA={a} epochB={b} markersA={mA} markersB={mB} />
           )}
 
           {mode === "blink" && (
-            <BlinkCompare epochA={a} epochB={b} markersA={[]} markersB={[]} />
+            <BlinkCompare epochA={a} epochB={b} markersA={mA} markersB={mB} />
           )}
 
           {mode === "difference" && (
             <DifferenceView
               available={data.difference_available}
               previewUrl={data.difference_preview_url}
-              epochA="A"
-              epochB="B"
               alt={`Later image (${dateB}) minus earlier image (${dateA})`}
               caption={
                 <>
                   <DifferenceLegend
-                    formula="Later image − Earlier image (B − A): positive values indicate higher surface brightness in the later epoch."
+                    formula="Later − Earlier: each pixel of the later image minus the same pixel of the earlier image."
                     red={`brighter in the later image (${dateB})`}
                     blue={`brighter in the earlier image (${dateA})`}
                   />
@@ -180,7 +217,7 @@ export function SixMonthCompare({
           )}
 
           {mode === "overlay" && (
-            <OverlayCanvas epochA={a} epochB={b} markers={[]} />
+            <OverlayCanvas epochA={a} epochB={b} markers={mA} />
           )}
 
           <TechnicalDetails summary="Technical details about the alignment">
@@ -244,23 +281,23 @@ export function SixMonthCompare({
           <TechnicalDetails>
           <dl className="kv-list kv-list-compact">
             <div>
-              <dt>Epoch A (earlier)</dt>
+              <dt>Earlier observation</dt>
               <dd>
                 {dateA} · {formatObsTime(data.epoch_a.observation!.date_obs!)}
               </dd>
             </div>
             <div>
-              <dt>Epoch B (later)</dt>
+              <dt>Later observation</dt>
               <dd>
                 {dateB} · {formatObsTime(data.epoch_b.observation!.date_obs!)}
               </dd>
             </div>
             <div>
-              <dt>Wavelength A</dt>
+              <dt>Wavelength (earlier)</dt>
               <dd>{data.epoch_a.wavelength_um.toFixed(6)} µm</dd>
             </div>
             <div>
-              <dt>Wavelength B</dt>
+              <dt>Wavelength (later)</dt>
               <dd>{data.epoch_b.wavelength_um.toFixed(6)} µm</dd>
             </div>
             <div>
@@ -304,29 +341,31 @@ export function SixMonthCompare({
             </div>
             <div>
               <dt>Difference</dt>
-              <dd>B − A (later − earlier)</dd>
+              <dd>Later − Earlier (B − A)</dd>
             </div>
           </dl>
           <p className="notes-text">
-            Epoch B is reprojected onto Epoch A's pixel grid. Source files:{" "}
+            The later image is reprojected onto the earlier image's pixel grid. Source files:{" "}
             <code>{data.epoch_a.source_file}</code>,{" "}
             <code>{data.epoch_b.source_file}</code>. Reference figures:{" "}
             <a href={imageUrl(data.epoch_a.figure_url)} target="_blank" rel="noreferrer">
-              A
+              earlier
             </a>
             {" · "}
             <a href={imageUrl(data.epoch_b.figure_url)} target="_blank" rel="noreferrer">
-              B aligned
+              later (aligned)
             </a>
             {" · "}
             <a href={imageUrl(data.difference_figure_url)} target="_blank" rel="noreferrer">
-              B − A
+              later − earlier
             </a>
             .
           </p>
           </TechnicalDetails>
         </aside>
       </div>
+
+      <FieldCandidatePanel candidates={candidates} error={candidateError} />
 
       <p className="disclaimer">
         These are two real SPHEREx observations. Any difference you see is an

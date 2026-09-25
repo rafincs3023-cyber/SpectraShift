@@ -2,41 +2,71 @@
 
 ## A. ~100 words
 
-SpectraShift is a web explorer for real NASA SPHEREx data that shows the same sky across wavelength and across time. Spectral View steps through all 102 near-infrared channels (0.74–5.01 µm) of a SPHEREx mosaic and plots the spectrum of any clicked position. Time Compare aligns SPHEREx observations taken 181.8 days apart and offers side-by-side, slider, blink, difference and overlay views of apparent change. A three-epoch moving-source pipeline links detections across dates and rejects stationary-star, blend and catalogue false positives. In the current data no candidate passes, and the site explains why — without claiming any discovery.
+SpectraShift is a web explorer for real NASA SPHEREx data that shows the same sky across wavelength and across time.
+
+- **Spectral View** steps through all 102 near-infrared channels (0.74–5.01 µm) of a SPHEREx mosaic and plots the spectrum of any clicked position.
+- **Time Compare** aligns two SPHEREx observations from June 19 and December 17, 2025 (181.77 days apart), with side-by-side, slider, blink, difference and overlay views.
+- **Explore** inspects either observation in detail.
+- **Candidates** lists possible moving-source candidates from those two dates, after measured, conservative quality checks.
+
+Candidates are for inspection only; nothing is claimed as a discovery.
 
 ## B. ~250 words
 
 SpectraShift is our response to the NASA Space Apps "Planet X and SPHEREx" challenge: an interactive, scientifically careful way to explore NASA's SPHEREx all-sky spectral survey.
 
-SPHEREx observes every part of the sky in 102 near-infrared wavelength channels and revisits it over time. SpectraShift turns those real IRSA data products into three connected tools. **Spectral View** shows one 5° × 4.25° region in all 102 channels (0.74–5.01 µm, detectors D1–D6); users change channels, see each channel's wavelength range and measured sky coverage, and click any position to plot its spectrum. **Time Compare** shows the same sky at different times: a verified pair from June 19 and December 17, 2025 (181.77 days, same detector, wavelengths within 0.003 µm), registered onto one pixel grid and cut to a fully valid common frame, plus a 31-day three-epoch set. Five modes — side by side, slider, blink, difference (later minus earlier) and overlay — make apparent changes visible.
+SpectraShift turns real IRSA data products into connected tools:
 
-The third part searches for moving sources across three epochs. Because crowded star fields produce many false "movers", SpectraShift applies a calibrated stationary-source veto, a blend and bright-star-halo veto, trajectory validation and epoch-propagated catalogue matching against Gaia, SIMBAD and JPL's small-body database. In the current data, all 725 linked tracks were rejected, so no candidate is reported; an injection test confirms the pipeline can still recover synthetic movers. SpectraShift never claims a discovery, and it explains empty results instead of hiding them.
+- **Spectral View** shows one 5° × 4.25° region in all 102 channels (0.74–5.01 µm, detectors D1–D6). Users change channels, see each channel's wavelength range and sky coverage, and click any position to plot its spectrum.
+- **Time Compare** shows the same sky on June 19 and December 17, 2025. The two images are 181.77 days apart, on the same detector, with wavelengths within 0.003 µm. They are registered onto one pixel grid, with five viewing modes including a Later − Earlier difference.
+- **Explore** inspects either observation with zoom and pan.
+
+The **two-epoch candidate pipeline** screens that same pair for possible moving sources:
+
+1. Detect sources in both images after PSF matching.
+2. Set aside everything at the same place on both dates. The position-error model is measured from thousands of stationary stars, and the tolerance is 5σ.
+3. Reject artifacts: flagged or corrupted pixels, bright-star glare, blends, non-star-like shapes, and changes the difference image does not confirm.
+
+Of about 6,500 matched sources, 11 candidates passed: 10 small shifts within the image blur and 1 source seen only in June. None is a clear position change. Two observations cannot establish a trajectory or orbit, so every candidate is only for further inspection; SpectraShift never claims a discovery.
 
 ## C. Detailed submission description
 
 ### What it is
-SpectraShift — "A SPHEREx Spectral & Multi-Epoch Sky Explorer" — is a web application (React frontend, FastAPI backend, Python science pipeline) built entirely on real NASA SPHEREx data from NASA/IPAC IRSA.
+SpectraShift, "a SPHEREx spectral and ~6-month two-epoch sky explorer", is a web application built entirely on real NASA SPHEREx data from NASA/IPAC IRSA. It has a React frontend on Cloudflare Workers and a FastAPI backend on Railway, with spectral tiles in private Cloudflare R2.
 
-### Spectral View — same sky, same time, 102 wavelengths
-- A 102-channel SPHEREx spectral mosaic (5.0° × 4.25°, 6.15″ pixels) centred on RA 155.352°, Dec −42.700°, created with the official IRSA SPHEREx Mosaic Tool.
-- All 102 channels from 0.743 to 5.009 µm across detectors D1–D6, navigable by slider, wavelength bar, buttons, channel number or keyboard.
-- For each channel: detector, subchannel, wavelength range, bandwidth and measured sky coverage (97.08–99.76%).
-- Click-to-spectrum or RA/Dec lookup returns the brightness of that position in every channel.
+Live: https://spectrashift.rafincs3023.workers.dev
 
-### Time Compare — same sky, different times
-- **Primary ~6-month pair:** SPHEREx Level-2 detector-3 exposures from 2025-06-19T00:00:58.754 and 2025-12-17T18:35:43.129 — a 181.774-day baseline (~5.97 months); wavelengths 1.684886 and 1.681677 µm (Δλ = 0.003209 µm, 0.08 of the bandwidth); PSF FWHM 5.22″ in both; units MJy/sr.
-- Epoch B reprojected onto Epoch A's WCS grid; every browser view uses the same 1016 × 346 px frame lying entirely inside the common footprint (99.97% valid pixels), so all modes are pixel-registered.
-- Modes: Side by Side, Slider, Blink, Difference (B − A: positive = brighter in the later epoch) and Overlay.
-- The metadata panel separates the target (RA 155.352°, Dec −42.700°) from the displayed frame centre.
-- **Secondary 31-day set:** Epochs A/C/B (May 9, May 27, June 9, 2025) with an A − B difference.
+### Spectral View: same sky, same time, 102 wavelengths
+- A 102-channel SPHEREx spectral mosaic (5.0° × 4.25°, 6.15″ pixels), centred on RA 155.352°, Dec −42.700°.
+- All 102 channels, 0.743–5.009 µm, across detectors D1–D6, with measured sky coverage per channel.
+- Click-to-spectrum, or RA/Dec lookup, returns the brightness of that position in every channel.
 
-### Moving-source search with false-positive rejection
-- Source extraction in three epochs, A → C → B linking with a constant-velocity prediction.
-- An astrometric model calibrated from ~75,000 stationary source pairs (centroid σ ≈ 0.48–0.58″, registration σ ≈ 0.08–0.11″).
-- Stationary-source veto (same source at the same sky position in other epochs), blend / bright-star-halo veto, uncertainty-aware trajectory check.
-- Catalogue classification: Gaia DR3 propagated to each epoch with proper motion, SIMBAD, and a full known-asteroid/comet search (JPL Small-Body Identification + Horizons from the SPHEREx spacecraft position), with statuses `KNOWN_OBJECT`, `UNMATCHED_AFTER_CHECKS` or `UNCERTAIN` and a written reason.
-- **Result:** 725 linked tracks, 0 accepted (673 stationary source, 52 blend/mislink). An earlier version's 22 "candidates" were shown to be chance links of stationary stars and were withdrawn.
-- **Sensitivity:** ~10% chance that the veto rejects a genuine mover; 43% end-to-end recovery of 150 injected synthetic movers.
+### Time Compare: same sky, about six months apart
+- **Earlier observation:** Level-2 detector-3 exposure from 2025-06-19T00:00:58.754 at 1.684886 µm.
+- **Later observation:** Level-2 detector-3 exposure from 2025-12-17T18:35:43.129 at 1.681677 µm.
+- Baseline 181.774125 days (~5.97 months); PSF FWHM 5.22″ in both images; units MJy/sr.
+- The later image is reprojected onto the earlier grid. Every view uses the same 1016 × 346 px frame, which lies inside the common footprint.
+- Modes: Side by Side, Slider, Blink, Difference (Later − Earlier) and Overlay.
+
+### Two-epoch candidate screening
+The inputs are only the two ~6-month images, their overlap mask, the difference image and the pixel flags of the two source frames.
+
+- **Measured image properties:**
+  - image sharpness: 9.1″ and 10.9″ FWHM
+  - noise
+  - alignment residual: about 0.1″ from 1,252 bright stars
+  - position-error model: floor 0.63″, k = 3.0″
+- **Stationary tolerance:** 5σ of the measured position error, corrected for about 6,500 trials.
+- **Vetoes:** footprint edge, SPHEREx-flagged pixels, corrupted pixels, star-likeness, bright-star halo, crowding and blends, centroid quality, and difference-image sign/significance.
+- **Result:** 11 candidates passed.
+  - 0 possible position changes
+  - 10 small position shifts (3.8–9.1″)
+  - 1 source seen only in the earlier image
+- **Validation:** synthetic injection tests recover a large position change and a small shift, reject every stationary star and reject edge, flagged-pixel and spike artifacts.
 
 ### Scientific integrity
-No discovery claims; "unmatched" never means "new"; an empty candidate list is explained and not interpreted as "no movers exist"; missing values are never invented; the interface always distinguishes wavelength (Spectral View) from time (Time Compare).
+- No discovery claims.
+- Two epochs cannot give a trajectory or orbit, so every candidate is labelled "preliminary two-epoch candidate".
+- The difference image is supporting evidence only.
+- Missing values are never invented.
+- The interface always distinguishes wavelength (Spectral View) from time (Time Compare).

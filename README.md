@@ -1,41 +1,66 @@
 # SpectraShift
 
-**A SPHEREx Spectral & Multi-Epoch Sky Explorer** — built for the NASA Space Apps 2026 *"Planet X and SPHEREx"* challenge.
+**A SPHEREx spectral and ~6-month two-epoch sky explorer**, built for the NASA Space Apps 2026 *"Planet X and SPHEREx"* challenge.
 
-SpectraShift lets anyone look at one region of the sky through NASA's SPHEREx mission in two directions at once: **across wavelength** (102 near-infrared channels) and **across time** (the same sky observed on different dates). On top of that it runs a conservative search for moving sources, with explicit safeguards against the most common false positives.
+**Live site:** https://spectrashift.rafincs3023.workers.dev
 
-> **Scientific integrity:** SpectraShift does not claim any discovery. No object is labelled "Planet X", a new planet, or a confirmed moving object. The current motion-candidate pipeline accepts **zero** candidates, and an empty candidate list does **not** mean that no moving sources exist in the field.
+SpectraShift lets anyone look at one region of the sky through NASA's SPHEREx mission in two directions:
+
+- **Across wavelength:** 102 near-infrared channels.
+- **Across time:** the same sky observed on **June 19, 2025** and **December 17, 2025**, 181.77 days apart.
+
+It also screens those two observations for **possible moving-source candidates**, with explicit safeguards against the most common false positives.
+
+> **Scientific integrity:** SpectraShift does not claim any discovery. No object is labelled "Planet X", a new planet or a confirmed moving object. Candidates are preliminary two-epoch changes that passed the current checks. Two observations cannot establish a trajectory or an orbit.
 
 ---
 
 ## The problem
 
-Searching for faint, slowly moving Solar System objects — the idea behind "Planet X" searches — requires comparing the same sky at different times and ruling out everything that only *looks* like motion. In a crowded star field, most apparent "movers" are artifacts: stationary stars linked across epochs by chance, blended sources, or features in the halo of a bright star. SPHEREx adds a second dimension: every sky position is observed across 0.75–5 µm, but a given exposure samples each position at a single wavelength.
+Searching for faint, slowly moving objects means comparing the same sky at different times and ruling out everything that only *looks* like a change. In a crowded star field, most apparent changes are artifacts:
 
-Raw SPHEREx products are large FITS files that are hard to explore without specialist tools.
+- blended stars
+- bright-star glare
+- flagged or corrupted pixels
+- centroid errors on the undersampled SPHEREx PSF
+
+SPHEREx adds a second dimension: every sky position is observed across 0.75–5 µm, but one exposure samples each position at a single wavelength. Raw SPHEREx products are large FITS files that are hard to explore without specialist tools.
 
 ## The solution
 
-SpectraShift turns real SPHEREx data into an interactive, honest web tool:
-
 | View | Question it answers |
 |---|---|
-| **Spectral View** | *Same sky, same time* — what does this region look like at each of 102 wavelengths, and what is the spectrum at a given position? |
-| **Time Compare** | *Same sky, different times* — what apparently changed between two registered observations? |
-| **Candidates** | Did any source move consistently across three epochs, after stationary-source, blend and catalogue checks? |
-| **Explore** | Browse a single SPHEREx epoch with zoom and pan. |
+| **Spectral View** | *Same sky, same time:* what does this region look like at each of 102 wavelengths, and what is the spectrum at a given position? |
+| **Time Compare** | *Same sky, about six months apart:* what apparently changed between Jun 19 and Dec 17, 2025? |
+| **Explore** | Inspect either real observation in detail, with candidate markers. |
+| **Candidates** | Which sources changed position or appearance between the two dates enough to deserve inspection, after quality checks? |
+
+The workflow runs as follows. SPHEREx data feeds two tracks:
+
+- **Wavelength:** the 102-channel spectral mosaic, for spectral exploration.
+- **Time:** the Jun 19, 2025 and Dec 17, 2025 observations are registered into a ~6-month comparison, then screened for two-epoch change/motion candidates.
+
+Both tracks end in public web exploration.
 
 ---
 
 ## Real NASA data
 
-All imagery is real SPHEREx data retrieved from NASA/IPAC **IRSA** (SPHEREx Quick Release, DOI [10.26131/IRSA652](https://doi.org/10.26131/IRSA652)); nothing is simulated.
+All imagery is real SPHEREx data retrieved from NASA/IPAC **IRSA** (SPHEREx Quick Release, DOI [10.26131/IRSA652](https://doi.org/10.26131/IRSA652)). Nothing is simulated.
 
-- **Spectral View:** a 102-channel spectral mosaic (5.0° × 4.25°, 6.15″ pixels) centred on RA 155.352°, Dec −42.700°, produced with the official IRSA SPHEREx Mosaic Tool.
-- **~6-month Time Compare (primary):** two SPHEREx Level-2 detector-3 (SWIR) exposures of the same target —
-  Epoch A `2025-06-19T00:00:58.754`, Epoch B `2025-12-17T18:35:43.129` — a **181.774-day** (~5.97-month) baseline, sampled at 1.684886 µm and 1.681677 µm (Δλ = 0.003209 µm, 0.08 of the channel bandwidth), PSF FWHM 5.22″ in both.
-- **31-day Time Compare (secondary) and candidate pipeline:** three Level-2 detector-3 exposures, Epoch A (2025-05-09), C (2025-05-27) and B (2025-06-09).
-- **Catalogues:** Gaia DR3, SIMBAD, the JPL Small-Body Identification service (all known asteroids and comets) and JPL Horizons.
+- **Spectral View:** a 102-channel spectral mosaic (5.0° × 4.25°, 6.15″ pixels), centred on RA 155.352°, Dec −42.700°. It was produced with the official IRSA SPHEREx Mosaic Tool.
+- **Time Compare and Candidates:** two SPHEREx Level-2 detector-3 (SWIR) exposures of the same target.
+
+| | Earlier observation | Later observation |
+|---|---|---|
+| Time (UTC) | `2025-06-19T00:00:58.754` | `2025-12-17T18:35:43.129` |
+| File | `level2_2025W25_1B_0652_1D3_spx_l2b-v20-2025-253.fits` | `level2_2025W51_1A_0594_2D3_spx_l2b-v21-2025-354.fits` |
+| Wavelength | 1.684886 µm | 1.681677 µm |
+
+- **Baseline:** 181.774125 days (~5.97 months).
+- **PSF FWHM:** 5.22″ (header) in both images.
+- **Difference convention:** Later − Earlier, in MJy/sr.
+- **Alignment:** the later image is reprojected onto the earlier grid (`data/time_compare_6month/`).
 
 ---
 
@@ -43,42 +68,35 @@ All imagery is real SPHEREx data retrieved from NASA/IPAC **IRSA** (SPHEREx Quic
 
 ```mermaid
 flowchart LR
-    IRSA["NASA SPHEREx data<br/>via NASA/IPAC IRSA"] --> L2["Level-2 spectral images<br/>(per-exposure FITS)"]
-    IRSA --> MOS["102-channel spectral mosaic<br/>(IRSA SPHEREx Mosaic Tool)"]
+    IRSA["NASA SPHEREx data<br/>via NASA/IPAC IRSA"] --> MOS["102-channel spectral mosaic<br/>(IRSA SPHEREx Mosaic Tool)"]
+    IRSA --> L2["Level-2 images<br/>Jun 19 and Dec 17, 2025"]
 
-    subgraph BE["FastAPI backend (read-only over verified products)"]
+    subgraph BE["FastAPI backend (read-only)"]
         direction TB
         subgraph S1["1 · Spectral"]
             SP["Channel table and<br/>wavelength calibration"] --> SPV["Channel previews"]
-            SP --> SPS["Spectrum API<br/>(pixel or RA/Dec)"]
+            SP --> SPS["Spectrum API"]
         end
-        subgraph S2["2 · Multi-epoch"]
-            REG["WCS registration<br/>(B reprojected onto A)"] --> CROP["Common fully-valid frame"]
-            CROP --> DIFF["Difference image (B − A)"]
+        subgraph S2["2 · ~6-month comparison"]
+            REG["Later image reprojected<br/>onto the earlier grid"] --> CROP["Common fully-valid frame"]
+            CROP --> DIFF["Difference (Later − Earlier)"]
         end
-        subgraph S3["3 · Moving-source search"]
-            EXT["Source extraction<br/>(3 epochs)"] --> LINK["A → C → B linking"]
-            LINK --> VETO1["Stationary-source veto"]
-            VETO1 --> VETO2["Blend / halo mislink veto"]
-            VETO2 --> VAL["Trajectory validation"]
-            VAL --> CAT["Catalogue classification<br/>(Gaia · SIMBAD · JPL)"]
-            CAT --> CAPI["Candidate API"]
+        subgraph S3["3 · Two-epoch candidates"]
+            DET["Source detection<br/>(both images, PSF-matched)"] --> MATCH["Cross-match +<br/>measured position error"]
+            MATCH --> VETO["Quality vetoes"]
+            VETO --> CAPI["Candidate API"]
         end
     end
 
     MOS --> SP
     L2 --> REG
-    L2 --> EXT
+    REG --> DET
 
     SPV --> UI["React public web interface"]
     SPS --> UI
     DIFF --> UI
     CROP --> UI
     CAPI --> UI
-
-    UI --> V1["Spectral View"]
-    UI --> V2["Time Compare"]
-    UI --> V3["Candidates · Explore"]
 ```
 
 More detail: [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md).
@@ -88,47 +106,104 @@ More detail: [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md).
 ## Features
 
 ### 102-channel Spectral View
-- All **102 SPHEREx channels**, 0.743–5.009 µm, detectors **D1–D6**, with a wavelength bar, slider, Prev/Next, channel entry and ←/→ keys.
-- Per-channel panel: detector, subchannel, wavelength range, bandwidth and **measured sky coverage** (97.08–99.76% of pixels with data).
+- All **102 SPHEREx channels**, 0.743–5.009 µm, on detectors **D1–D6**.
+- Navigation by wavelength bar, slider, Prev/Next, channel entry or the ←/→ keys.
+- A per-channel panel shows detector, wavelength range, bandwidth and **measured sky coverage**.
 - Click anywhere (or enter RA/Dec) to plot that position's brightness in all 102 channels.
 
-### Multi-epoch Time Compare
-- **~6-Month Compare (primary):** Jun 19 → Dec 17, 2025, Epoch B reprojected onto Epoch A's pixel grid and cut to one **1016 × 346 px** frame that lies entirely inside the common footprint (99.97% valid pixels) — so every mode is pixel-registered.
-- **31-Day Compare (secondary):** Epochs A / C / B, with the precomputed A − B difference for the registered A/B pair.
-- Five modes: **Side by Side, Slider, Blink, Difference, Overlay** (red/cyan).
-- **Difference = B − A:** positive values mean higher surface brightness in the later epoch.
-- Metadata panel with dates, baseline, wavelengths, detector, PSF, units, footprint, **target** and **frame centre** (labelled separately).
+### ~6-month Time Compare
+- Jun 19 → Dec 17, 2025, cut to one **1016 × 346 px** frame that lies entirely inside the common footprint (99.97% valid pixels), so every mode is pixel-registered.
+- Five modes: **Side by Side, Slider, Blink, Difference, Overlay**.
+- **Difference = Later − Earlier:**
+  - red: brighter in the later image
+  - blue: brighter in the earlier image
+  - dark: little or no change
 
-### Moving-source candidate pipeline with false-positive rejection
-1. Source extraction in all three epochs (DAOStarFinder, 7σ; shape limits relaxed for SPHEREx's undersampled PSF; flagged bad pixels masked).
-2. A → C → B linking with a constant-velocity prediction and an uncertainty-aware epoch-C gate.
-3. **Stationary-source veto** — in sky coordinates, using an astrometric model calibrated from ~75,000 stationary source pairs (centroid σ ≈ 0.48–0.58″, registration σ ≈ 0.08–0.11″): a track is rejected if its detections are the same source at the same position in the other epochs.
-4. **Blend / mislink veto** — tracks built around persistent sources or bright-star halos.
-5. Trajectory validation, then catalogue classification (Gaia DR3 propagated to each epoch with proper motion, SIMBAD, JPL small-body search from the SPHEREx spacecraft's own position) into `KNOWN_OBJECT`, `UNMATCHED_AFTER_CHECKS` or `UNCERTAIN`, each with a written reason.
+  A difference does not automatically mean that an object moved.
 
-**Current result:** 725 linked tracks → **0 accepted** (673 stationary source, 52 blend/mislink, 0 inconsistent trajectory). The previous 22 "candidates" of an earlier pipeline version were all shown to be chance links of unrelated stationary stars and are no longer reported.
+### Two-epoch candidate pipeline (`backend/two_epoch_candidates.py`)
+Inputs are only the two ~6-month images, their overlap mask, the B − A difference and the FLAGS of the two source frames.
 
-**Sensitivity checks:** the veto would reject a genuine mover about **10%** of the time (measured on random sky positions). In an injection–recovery test, 43% of 150 synthetic movers were recovered end to end and only 4.4% of the linked ones were vetoed; the losses come mainly from detection completeness in this crowded field.
+1. **Background and noise:** sigma-clipped median/MAD in 32 px boxes.
+2. **PSF matching:** the sharper image (FWHM 9.1″ measured) is blurred to the other's 10.9″, so detection depth, shape tests and centroid biases are symmetric.
+3. **Detection:** each image separately, with a matched filter at ≥ 5σ. The noise is measured on the filtered image itself, because the reprojected later image has correlated noise.
+4. **Cross-match** on the shared grid (mutual nearest neighbour within 1 FWHM).
+   - The epoch-to-epoch position error is **measured** from about 6,500 matched sources: σ² = floor² + k²(1/SNR₁² + 1/SNR₂²), with floor 0.63″ and k 3.0″.
+   - A source is **stationary** within 5σ. With ~6,500 matches, a 3σ cut would pass ~70 noise pairs; 5σ leaves an expected 0.02.
+5. **Forced photometry** at the same position in the other image: a source still present at ≥ 3σ is not a change.
+6. **Quality vetoes:**
+   - footprint edge
+   - SPHEREx-flagged pixels (both images; the later image is mapped back to its native pixels)
+   - corrupted strongly negative pixels
+   - non-star-like shape (single-pixel spikes)
+   - bright-star halo
+   - blends and crowding
+   - poor or clipped centroids
+   - a difference image that does not show the change at ≥ 5σ with the right sign
+7. **Candidate types:**
+   - **possible position change:** an earlier-only source paired with a similar later-only source.
+   - **small position shift:** matched, but beyond 5σ and SNR ≥ 10.
+   - **seen only in the earlier / later image.**
+
+   Rate = displacement / 181.774125 days. There is no invented "planet probability" score.
+
+**Current result** (`data/time_compare_6month/two_epoch_candidates.json`):
+
+- Detections: 7,533 in the earlier image and 6,790 in the later one; 6,472 are found in both.
+- **11 candidates passed the current checks.**
+  - **0 possible position changes.**
+  - 10 small position shifts, of 3.8–9.1″.
+  - 1 source seen only in the earlier image.
+  - 0 sources seen only in the later image.
+- Rejected, by first failed check:
+
+  | Check | Rejected |
+  |---|---|
+  | stationary | 6,331 |
+  | present in both | 1,214 |
+  | flagged pixel | 158 |
+  | poor centroid | 62 |
+  | footprint edge | 34 |
+  | corrupted pixel | 14 |
+  | blend | 13 |
+  | bright-star halo | 12 |
+  | not star-like | 1 |
+  | difference disagrees | 1 |
+
+The small shifts sit in the long tail of the measured position errors. 141 matched sources lie beyond 5σ, versus 0.02 for Gaussian errors, so blends and pixel sampling are the likely cause. A real shift that small over six months would need a nearby star with a very high proper motion; no Solar System object moves that slowly. Every candidate is for inspection only.
+
+**Validation** (`backend/tests/test_two_epoch_candidates.py`) runs on synthetic star fields, never the real files:
+
+- An injected large position change is recovered as a pair (separation within 0.3 px).
+- An injected 1.5 px shift of a bright star is recovered.
+- All 250 stationary stars are rejected.
+- Edge, flagged-pixel and single-pixel-spike look-alikes are rejected for the right reason.
+- Zero displacement is always stationary.
+
+On the real data the tests check that:
+
+- the stored results equal a fresh run
+- only the Jun 19 / Dec 17 files are used
+- every candidate lies in the shared footprint
+- rate = displacement / 181.774125 days
 
 ---
 
 ## Scientific safeguards
 
 - Real data only; missing values are shown as "—", never invented.
-- Catalogue positions are propagated to each observation epoch; matches use combined uncertainties and chance-coincidence probabilities.
-- `UNMATCHED_AFTER_CHECKS` requires every required check to have succeeded and never means "unknown" or "new".
-- Stationary-source and blend vetoes run **before** a track can become a candidate; every rejected track is logged with its reason (`rejected_three_epoch_tracks.csv`).
-- The site distinguishes Spectral View (wavelength) from Time Compare (time) on every relevant page.
-- No discovery language anywhere; an empty candidate list is explained, not hidden.
+- Thresholds are measured from the data or derived from stated trial counts; each is reported on the Candidates page.
+- The difference image is supporting evidence only, never the sole basis for a candidate.
+- The site keeps Spectral View (wavelength) and Time Compare (time) apart on every relevant page.
+- No discovery language anywhere; a zero result is explained, not hidden.
 
 ---
 
 ## Tech stack
 
-- **Frontend:** React 19, TypeScript, Vite, React Router
-- **Backend:** Python, FastAPI, Uvicorn, NumPy, pandas, Astropy, SciPy, photutils, Pillow
-- **Pipeline:** Astropy, photutils, reproject, astroquery (Gaia, SIMBAD, JPL Horizons), JPL Small-Body Identification API, Matplotlib
-- **Tests:** pytest (backend), `tsc` + oxlint (frontend)
+- **Frontend:** React 19, TypeScript, Vite, React Router (Cloudflare Workers)
+- **Backend:** Python, FastAPI, Uvicorn, NumPy, SciPy, Astropy, Pillow, boto3 (Railway; spectral tiles in private Cloudflare R2)
+- **Tests:** pytest (backend); `tsc` and oxlint (frontend)
 
 ---
 
@@ -136,18 +211,16 @@ More detail: [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md).
 
 | Endpoint | Purpose |
 |---|---|
-| `GET /api/health` | Data / file availability |
-| `GET /api/spectral/status`, `/metadata` | Spectral mosaic status; all 102 channels with wavelengths, detectors and coverage |
+| `GET /api/health` | Data availability |
+| `GET /api/spectral/status`, `/metadata` | Spectral mosaic status; all 102 channels |
 | `GET /api/spectral/channels/{n}` · `/channels/{n}/preview` | One channel's metadata and preview PNG |
 | `GET /api/spectral/spectrum?ra=&dec=` (or `x=&y=`) | Brightness of one position in all 102 channels |
 | `GET /api/compare/6month` | ~6-month pair metadata and preview URLs |
-| `GET /api/compare/6month/preview/{A\|B\|difference}` | Registered previews (difference = B − A) |
+| `GET /api/compare/6month/preview/{A\|B\|difference}` | Registered previews (difference = Later − Earlier) |
 | `GET /api/compare/6month/figure/{name}` | Annotated reference figures |
-| `GET /api/observations` · `/api/compare/pair` | 31-day epochs and pair configuration |
-| `GET /api/observations/{epoch}/preview` · `/api/compare/difference-preview` | 31-day previews and A − B difference |
-| `GET /api/linking-summary` | Latest linker run: tracks formed, accepted, rejected by reason |
-| `GET /api/candidates` · `/api/candidates/{id}` | Current candidates (currently none) and details |
-| `GET /api/catalogue-crossmatch/{id}` | Per-candidate catalogue audit trail |
+| `GET /api/candidates` | Two-epoch candidates, rejection counts, thresholds, limitations |
+| `GET /api/candidates/markers?image=earlier\|later` | Marker positions on the displayed frame |
+| `GET /api/candidates/{id}` · `/api/candidates/{id}/cutout/{earlier\|later\|difference}` | Candidate details and real-pixel cutouts |
 
 Interactive docs: `http://127.0.0.1:8000/docs` when the backend is running.
 
@@ -157,13 +230,11 @@ Interactive docs: `http://127.0.0.1:8000/docs` when the backend is running.
 
 Requirements: Python 3.11+, Node.js 20.19+ (or 22.12+).
 
-The raw SPHEREx files are **not** in Git (multi-GB). Place them as follows:
-
 | Data | Location |
 |---|---|
-| 102-channel mosaic (`SpectraShift_Part1_16.fits.gz`, `SpectraShift_Remaining86.fits.gz`) | `data/spherex/` |
-| 31-day Level-2 frames (A, C, B) | project root (tracked) |
-| ~6-month verified products | `data/time_compare_6month/` (tracked) |
+| 102-channel mosaic (`SpectraShift_Part1_16.fits.gz`, `SpectraShift_Remaining86.fits.gz`, not in Git) | `data/spherex/` |
+| ~6-month products and two-epoch results | `data/time_compare_6month/` (tracked) |
+| The two ~6-month Level-2 source frames | project root (tracked) |
 
 ```bash
 # backend
@@ -177,50 +248,39 @@ npm install
 npm run dev            # http://localhost:5173
 ```
 
-Optional: `python backend/build_spectral_cache.py` builds a ~3 GB fast-access cube for Spectral View (faster channel switching and spectra).
-
-Re-running the science pipeline (optional, `pip install -r requirements-pipeline.txt`):
+Re-run the two-epoch candidate pipeline (a few seconds):
 
 ```bash
-python three_epoch_compare.py        # detection, linking, stationary/blend vetoes
-python validate_candidates.py        # trajectory validation
-python catalogue_crossmatch_v3.py    # catalogue classification (cached queries)
-python final_ranking.py              # priority ranking
-python test_linker_injection.py      # optional: injection-recovery sensitivity test
+python backend/two_epoch_candidates.py   # rewrites data/time_compare_6month/two_epoch_candidates.json
 ```
 
 Tests: `cd backend && python -m pytest tests/` · `cd frontend && npm run build && npm run lint`.
 
-Deployment notes: [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md). In production the Spectral View reads a lossless tile bundle of the full 102-channel cube from private Cloudflare R2 (`SPECTRASHIFT_SPECTRAL_BACKEND=r2`; build it with `python backend/build_r2_spectral_bundle.py`), so the server never downloads the 3 GB FITS files.
+Deployment: [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md).
 
 ---
 
 ## Limitations
 
-- **Zero candidates is not "no movers".** End-to-end recovery of injected movers is ~43% (flux 3–30), limited by detection completeness in a crowded field; the veto itself removes ~10% of genuine movers.
-- The motion search covers straight-line motion of 5–120″ over 31 days (≈0.16–3.9″/day) in one detector (D3).
-- DAOStarFinder cannot separate peaks closer than ~25″; blends are handled by vetoes rather than deblending.
-- The ~6-month pair differs slightly in wavelength (Δλ = 0.0032 µm) and is compared after reprojection, so a difference residual is an *apparent* change, not a confirmed physical one.
-- One sky region, one detector for Time Compare; the Spectral View mosaic is a single epoch.
-- SkyBoT and the MPC Checker were unreachable; the equivalent asteroid/comet search used JPL's service.
+- **Two epochs cannot establish a trajectory, acceleration or an orbit.** A candidate is a possible change, never a measured path.
+- An earlier-only / later-only pairing is a possibility; other pairings may be equally possible.
+- A source seen on one date only may be variable, an artifact or noise.
+- The two images differ slightly in wavelength (Δλ = 0.0032 µm) and in sharpness, so a difference is an *apparent* change.
+- Detection completeness is limited in this crowded field: an empty or short candidate list does not mean that nothing moves here.
+- One sky region and one detector (D3) for the time comparison.
 
 ## Future work
 
-- PSF-fitting photometry and deblending to raise detection completeness.
-- Shift-and-stack / synthetic tracking for fainter movers across more epochs.
-- More sky regions and all six detectors in Time Compare.
-- Wavelength-matched differencing using SPHEREx's per-pixel wavelength maps.
-- A hosted deployment with a persistent data volume.
-
-## Demo flow
-
-See [`docs/DEMO_FLOW.md`](docs/DEMO_FLOW.md) — a 2–4 minute walkthrough: Home → Spectral View (channels, click-to-spectrum) → Time Compare (side by side, slider, blink, difference) → Candidates (vetoes and the zero-candidate result) → safeguards.
+- More epochs of the same field, so that candidates can be tested for a consistent path.
+- PSF-fitting photometry and deblending.
+- Catalogue checks (Gaia, SIMBAD, known Solar System objects) for the two-epoch candidates.
+- More sky regions and detectors.
 
 ## Further documents
 
-- [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) — architecture and data flow
-- [`docs/DEMO_FLOW.md`](docs/DEMO_FLOW.md) — demo script
-- [`docs/PROJECT_DESCRIPTIONS.md`](docs/PROJECT_DESCRIPTIONS.md) — short, medium and detailed descriptions
-- [`docs/PRESENTATION.md`](docs/PRESENTATION.md) — slide-by-slide content
-- [`docs/NASA_SUBMISSION.md`](docs/NASA_SUBMISSION.md) — submission draft
-- [`PROJECT_SUMMARY.md`](PROJECT_SUMMARY.md) — development history
+- [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md): architecture and data flow
+- [`docs/DEMO_FLOW.md`](docs/DEMO_FLOW.md): demo script
+- [`docs/PROJECT_DESCRIPTIONS.md`](docs/PROJECT_DESCRIPTIONS.md): short, medium and detailed descriptions
+- [`docs/PRESENTATION.md`](docs/PRESENTATION.md): slide-by-slide content
+- [`docs/NASA_SUBMISSION.md`](docs/NASA_SUBMISSION.md): submission draft
+- [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md): production setup

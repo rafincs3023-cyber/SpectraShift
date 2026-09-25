@@ -633,6 +633,7 @@ code {
 
 /* frames follow the displayed region's aspect ratio instead of a square */
 .compare-viewer-wide .obs-image-frame { aspect-ratio: var(--frame-aspect, 1 / 1); }
+.compare-viewer-wide .zoom-pan-viewport { aspect-ratio: var(--frame-aspect, 1 / 1); }
 .compare-viewer-wide .side-by-side-grid { grid-template-columns: 1fr; }
 .compare-viewer-wide > .section-note { margin: 0.75rem 0 0; }
 
@@ -749,6 +750,12 @@ code {
 .marker-dot:hover {
   border-color: #fff;
   background: rgba(94, 184, 255, 0.35);
+}
+
+/* seen only in the other image: marks where the source was / will be */
+.marker-dot-absent {
+  border-style: dashed;
+  background: transparent;
 }
 
 .marker-label {
@@ -1736,6 +1743,7 @@ a.spectral-mode:hover { border-color: var(--accent); }
 .hero-lead { font-size: 1.15rem; color: var(--text); }
 .home-section-title { font-size: 1.05rem; color: var(--text-muted); font-weight: 600; margin: 0.5rem 0 0.75rem; }
 .feature-grid-3 { grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); margin-bottom: 1rem; }
+.feature-grid-4 { grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); margin-bottom: 1.5rem; }
 .feature-card { display: flex; flex-direction: column; gap: 0.35rem; }
 .feature-card h2 { margin: 0; }
 .feature-tag { color: var(--text-muted); font-size: 0.72rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; }
@@ -1758,4 +1766,25 @@ a.spectral-mode:hover { border-color: var(--accent); }
 .explore-side .empty-card-actions .btn { font-size: 0.82rem; }
 @media (min-width: 901px) {
   .spectral-side { position: sticky; top: 5.5rem; align-self: start; }
+}
+
+/* ---------- two-epoch candidates ---------- */
+
+.marker-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin: 0.25rem 0 0.75rem;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  cursor: pointer;
+}
+
+/* Time Compare: the candidate panel sits under the images, full width */
+.compare-page .field-panel { position: static; margin-top: 1rem; }
+.compare-page .field-candidate-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  max-height: none;
+  overflow: visible;
 }

@@ -1,6 +1,8 @@
 # Build context for the backend image (Dockerfile at the repo root).
-# Root-level runtime data (level2_*.fits A/C/B frames, pipeline CSV/JSON
-# outputs), data/time_compare_6month/ and backend/ must stay IN the context.
+# Runtime data that must stay IN the context: backend/,
+# data/time_compare_6month/ and the two Level-2 source frames of the
+# ~6-month pair (level2_2025W25_1B_0652_1D3_*, level2_2025W51_1A_0594_2D3_*),
+# whose headers and pixel flags the backend reads.
 
 # VCS, editors, OS
 .git
@@ -43,3 +45,13 @@ data/injection_test/
 # Not needed at runtime
 docs/
 data/pipeline_v1_backup/
+
+# Retired 31-day (May 9 / May 27 / Jun 9 2025) work: archived, never served
+archive/
+level2_2025W19_2B_0166_3D3_spx_l2b-v20-2025-247.fits
+level2_2025W22_1B_0226_1D3_spx_l2b-v20-2025-250.fits
+level2_2025W24_1A_0099_1D3_spx_l2b-v20-2025-252.fits
+observation_B_aligned.fits
+variance_B_aligned.fits
+difference_A_minus_B.fits
+change_significance.fits

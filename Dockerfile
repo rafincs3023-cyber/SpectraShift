@@ -1,8 +1,8 @@
 # SpectraShift backend (FastAPI) for Railway.
 #
-# Built from the repository ROOT because the backend reads root-level runtime
-# data (31-day Level-2 FITS frames, pipeline CSV/JSON outputs) and
-# data/time_compare_6month/ via BASE_DIR = project root.
+# Built from the repository ROOT because the backend reads
+# data/time_compare_6month/ and the two root-level Level-2 source frames of
+# the ~6-month pair via BASE_DIR = project root.
 #
 # The ~3.1 GB 102-channel spectral mosaic is not in Git. In production set
 # SPECTRASHIFT_SPECTRAL_BACKEND=r2 plus the R2_* variables: Spectral View then

@@ -1,5 +1,5 @@
 // Spectral View API: the 102-channel SPHEREx mosaic cubes served by
-// backend/spectral_api.py (/api/spectral/*). Kept separate from the A/C/B
+// backend/spectral_api.py (/api/spectral/*). Kept separate from the
 // Time Compare client so the two features stay independent.
 
 import { API_BASE_URL, ApiError } from "./client";

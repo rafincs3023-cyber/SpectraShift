@@ -1,0 +1,595 @@
+{
+  "pipeline": "two-epoch-1.0",
+  "inputs": {
+    "earlier": {
+      "date": "2025-06-19T00:00:58.754",
+      "file": "level2_2025W25_1B_0652_1D3_spx_l2b-v20-2025-253.fits",
+      "grid_file": "epoch_A_2025-06-19.fits",
+      "wavelength_um": 1.6848855731095453
+    },
+    "later": {
+      "date": "2025-12-17T18:35:43.129",
+      "file": "level2_2025W51_1A_0594_2D3_spx_l2b-v21-2025-354.fits",
+      "grid_file": "epoch_B_2025-12-17_aligned.fits",
+      "wavelength_um": 1.6816769850019317
+    },
+    "overlap_mask": "overlap_mask.fits",
+    "difference": "difference_B_minus_A.fits",
+    "time_baseline_days": 181.77412471100251,
+    "pixel_scale_arcsec": 6.154337821443413
+  },
+  "measured": {
+    "fwhm_arcsec": {
+      "A": 9.11,
+      "B": 10.86
+    },
+    "median_noise_mjy_sr": {
+      "A": 0.02331,
+      "B": 0.02152
+    },
+    "detections": {
+      "A": 7533,
+      "B": 6790
+    },
+    "matched_in_both": 6472,
+    "alignment_residual_shift_arcsec": [
+      0.093,
+      -0.111
+    ],
+    "alignment_scatter_arcsec": 0.632,
+    "bright_stars_used_for_alignment": 1252,
+    "psf_matched_fwhm_arcsec": 10.86,
+    "position_error_model": {
+      "sigma_floor_arcsec": 0.632,
+      "k_arcsec": 3.012,
+      "formula": "sigma^2 = floor^2 + k^2 (1/SNR_earlier^2 + 1/SNR_later^2), per axis"
+    },
+    "matched_beyond_stationary_tolerance": 141,
+    "gaussian_expectation_beyond_tolerance": 0.024
+  },
+  "thresholds": {
+    "detection_snr": 5.0,
+    "forced_present_snr": 3.0,
+    "match_radius_arcsec": 10.86,
+    "stationary_tolerance": "5 sigma of the combined alignment + centroid error (at least 3.16 arcsec for bright stars)",
+    "edge_margin_arcsec": 24.6,
+    "halo_radius_arcsec": 49.2,
+    "crowding_radius_arcsec": 21.7,
+    "max_pair_separation_arcsec": 1846.0,
+    "pair_brightness_ratio_max": 2.0,
+    "difference_support_snr": 5.0
+  },
+  "rejected_by_reason": {
+    "stationary": 6331,
+    "present_in_both": 1214,
+    "flagged_pixel": 158,
+    "poor_centroid": 62,
+    "footprint_edge": 34,
+    "corrupted_pixel": 14,
+    "crowded_or_blended": 13,
+    "bright_star_halo": 12,
+    "not_star_like": 1,
+    "difference_disagrees": 1
+  },
+  "rejection_reasons": {
+    "stationary": "Same position in both observations (a stationary source).",
+    "present_in_both": "Also visible at the same position in the other observation.",
+    "footprint_edge": "Too close to the edge of the shared image area.",
+    "flagged_pixel": "On or next to a pixel SPHEREx flagged as unreliable.",
+    "non_finite_pixels": "Missing pixels around the source.",
+    "not_star_like": "Shape unlike a star (e.g. a single-pixel spike).",
+    "bright_star_halo": "Inside the glare of a bright star.",
+    "crowded_or_blended": "Too close to another source to measure separately.",
+    "poor_centroid": "Position too uncertain.",
+    "difference_disagrees": "The difference image does not show a clear change of the expected sign.",
+    "corrupted_pixel": "Next to a corrupted (strongly negative) pixel in one of the images.",
+    "shape_mismatch": "Looks different in the two images (e.g. a blend), so the positions are not comparable."
+  },
+  "flag_notes": [],
+  "counts": {
+    "total": 11,
+    "possible_position_change": 0,
+    "shifted_match": 10,
+    "seen_only_earlier": 1,
+    "seen_only_later": 0
+  },
+  "candidates": [
+    {
+      "candidate_id": "SX6M-001",
+      "kind": "shifted_match",
+      "earlier_date": "2025-06-19T00:00:58.754",
+      "later_date": "2025-12-17T18:35:43.129",
+      "time_baseline_days": 181.77412471100251,
+      "earlier": {
+        "ra": 154.029199,
+        "dec": -42.347295,
+        "x": 428.06,
+        "y": 378.13,
+        "snr": 195.2,
+        "brightness": 28.4544,
+        "peak": 12.3431,
+        "sharpness": 0.454,
+        "roundness": 0.097,
+        "centroid_error_arcsec": 0.02,
+        "forced_snr_in_other_image": null,
+        "difference_snr": null
+      },
+      "later": {
+        "ra": 154.029799,
+        "dec": -42.349772,
+        "x": 429.0,
+        "y": 379.23,
+        "snr": 173.6,
+        "brightness": 36.7365,
+        "peak": 4.7666,
+        "sharpness": 0.137,
+        "roundness": 0.066,
+        "centroid_error_arcsec": 0.02,
+        "forced_snr_in_other_image": null,
+        "difference_snr": null
+      },
+      "angular_displacement_arcsec": 9.06,
+      "apparent_motion_arcsec_per_day": 0.0498,
+      "position_angle_deg": 169.9,
+      "brightness_ratio_later_over_earlier": 1.291,
+      "shift_significance_sigma": 14.1,
+      "stationary_tolerance_arcsec": 3.16,
+      "status": "passed_current_checks",
+      "caveats": [
+        "The shift is smaller than the image blur, so blends and pixel sampling can mimic it.",
+        "A real shift this small in six months would need a nearby star with a very high proper motion; no Solar System object moves this slowly."
+      ]
+    },
+    {
+      "candidate_id": "SX6M-002",
+      "kind": "shifted_match",
+      "earlier_date": "2025-06-19T00:00:58.754",
+      "later_date": "2025-12-17T18:35:43.129",
+      "time_baseline_days": 181.77412471100251,
+      "earlier": {
+        "ra": 155.191269,
+        "dec": -42.709087,
+        "x": 967.22,
+        "y": 299.0,
+        "snr": 79.0,
+        "brightness": 14.6165,
+        "peak": 2.2389,
+        "sharpness": 0.164,
+        "roundness": -0.491,
+        "centroid_error_arcsec": 0.04,
+        "forced_snr_in_other_image": null,
+        "difference_snr": null
+      },
+      "later": {
+        "ra": 155.190562,
+        "dec": -42.710187,
+        "x": 967.27,
+        "y": 299.71,
+        "snr": 74.8,
+        "brightness": 12.0238,
+        "peak": 3.8871,
+        "sharpness": 0.415,
+        "roundness": -0.393,
+        "centroid_error_arcsec": 0.04,
+        "forced_snr_in_other_image": null,
+        "difference_snr": null
+      },
+      "angular_displacement_arcsec": 4.38,
+      "apparent_motion_arcsec_per_day": 0.0241,
+      "position_angle_deg": 205.3,
+      "brightness_ratio_later_over_earlier": 0.823,
+      "shift_significance_sigma": 7.0,
+      "stationary_tolerance_arcsec": 3.17,
+      "status": "passed_current_checks",
+      "caveats": [
+        "The shift is smaller than the image blur, so blends and pixel sampling can mimic it.",
+        "A real shift this small in six months would need a nearby star with a very high proper motion; no Solar System object moves this slowly."
+      ]
+    },
+    {
+      "candidate_id": "SX6M-003",
+      "kind": "shifted_match",
+      "earlier_date": "2025-06-19T00:00:58.754",
+      "later_date": "2025-12-17T18:35:43.129",
+      "time_baseline_days": 181.77412471100251,
+      "earlier": {
+        "ra": 154.548903,
+        "dec": -42.715105,
+        "x": 728.14,
+        "y": 444.78,
+        "snr": 35.6,
+        "brightness": 6.1329,
+        "peak": 2.6368,
+        "sharpness": 0.447,
+        "roundness": 0.247,
+        "centroid_error_arcsec": 0.08,
+        "forced_snr_in_other_image": null,
+        "difference_snr": null
+      },
+      "later": {
+        "ra": 154.550316,
+        "dec": -42.714882,
+        "x": 728.61,
+        "y": 444.35,
+        "snr": 26.8,
+        "brightness": 5.9244,
+        "peak": 1.1218,
+        "sharpness": 0.207,
+        "roundness": 0.173,
+        "centroid_error_arcsec": 0.11,
+        "forced_snr_in_other_image": null,
+        "difference_snr": null
+      },
+      "angular_displacement_arcsec": 3.82,
+      "apparent_motion_arcsec_per_day": 0.021,
+      "position_angle_deg": 77.9,
+      "brightness_ratio_later_over_earlier": 0.966,
+      "shift_significance_sigma": 5.8,
+      "stationary_tolerance_arcsec": 3.24,
+      "status": "passed_current_checks",
+      "caveats": [
+        "The shift is smaller than the image blur, so blends and pixel sampling can mimic it.",
+        "A real shift this small in six months would need a nearby star with a very high proper motion; no Solar System object moves this slowly."
+      ]
+    },
+    {
+      "candidate_id": "SX6M-004",
+      "kind": "shifted_match",
+      "earlier_date": "2025-06-19T00:00:58.754",
+      "later_date": "2025-12-17T18:35:43.129",
+      "time_baseline_days": 181.77412471100251,
+      "earlier": {
+        "ra": 153.381956,
+        "dec": -42.217581,
+        "x": 147.93,
+        "y": 459.88,
+        "snr": 25.0,
+        "brightness": 5.8872,
+        "peak": 2.4684,
+        "sharpness": 0.464,
+        "roundness": 0.166,
+        "centroid_error_arcsec": 0.12,
+        "forced_snr_in_other_image": null,
+        "difference_snr": null
+      },
+      "later": {
+        "ra": 153.380663,
+        "dec": -42.215699,
+        "x": 146.9,
+        "y": 459.23,
+        "snr": 19.9,
+        "brightness": 5.9659,
+        "peak": 0.9555,
+        "sharpness": 0.175,
+        "roundness": 0.113,
+        "centroid_error_arcsec": 0.15,
+        "forced_snr_in_other_image": null,
+        "difference_snr": null
+      },
+      "angular_displacement_arcsec": 7.6,
+      "apparent_motion_arcsec_per_day": 0.0418,
+      "position_angle_deg": 333.0,
+      "brightness_ratio_later_over_earlier": 1.013,
+      "shift_significance_sigma": 11.4,
+      "stationary_tolerance_arcsec": 3.31,
+      "status": "passed_current_checks",
+      "caveats": [
+        "The shift is smaller than the image blur, so blends and pixel sampling can mimic it.",
+        "A real shift this small in six months would need a nearby star with a very high proper motion; no Solar System object moves this slowly."
+      ]
+    },
+    {
+      "candidate_id": "SX6M-005",
+      "kind": "shifted_match",
+      "earlier_date": "2025-06-19T00:00:58.754",
+      "later_date": "2025-12-17T18:35:43.129",
+      "time_baseline_days": 181.77412471100251,
+      "earlier": {
+        "ra": 154.100336,
+        "dec": -41.758763,
+        "x": 284.68,
+        "y": 68.77,
+        "snr": 19.3,
+        "brightness": 2.6185,
+        "peak": 0.7233,
+        "sharpness": 0.291,
+        "roundness": -0.075,
+        "centroid_error_arcsec": 0.16,
+        "forced_snr_in_other_image": null,
+        "difference_snr": null
+      },
+      "later": {
+        "ra": 154.101956,
+        "dec": -41.758685,
+        "x": 285.27,
+        "y": 68.36,
+        "snr": 14.5,
+        "brightness": 2.7,
+        "peak": 0.4371,
+        "sharpness": 0.179,
+        "roundness": -0.114,
+        "centroid_error_arcsec": 0.21,
+        "forced_snr_in_other_image": null,
+        "difference_snr": null
+      },
+      "angular_displacement_arcsec": 4.36,
+      "apparent_motion_arcsec_per_day": 0.024,
+      "position_angle_deg": 86.3,
+      "brightness_ratio_later_over_earlier": 1.031,
+      "shift_significance_sigma": 6.3,
+      "stationary_tolerance_arcsec": 3.42,
+      "status": "passed_current_checks",
+      "caveats": [
+        "The shift is smaller than the image blur, so blends and pixel sampling can mimic it.",
+        "A real shift this small in six months would need a nearby star with a very high proper motion; no Solar System object moves this slowly."
+      ]
+    },
+    {
+      "candidate_id": "SX6M-006",
+      "kind": "shifted_match",
+      "earlier_date": "2025-06-19T00:00:58.754",
+      "later_date": "2025-12-17T18:35:43.129",
+      "time_baseline_days": 181.77412471100251,
+      "earlier": {
+        "ra": 154.617108,
+        "dec": -42.294295,
+        "x": 633.87,
+        "y": 219.77,
+        "snr": 18.9,
+        "brightness": 2.7294,
+        "peak": 1.029,
+        "sharpness": 0.45,
+        "roundness": 0.025,
+        "centroid_error_arcsec": 0.16,
+        "forced_snr_in_other_image": null,
+        "difference_snr": null
+      },
+      "later": {
+        "ra": 154.618297,
+        "dec": -42.293294,
+        "x": 634.03,
+        "y": 219.0,
+        "snr": 12.6,
+        "brightness": 3.0998,
+        "peak": 0.3271,
+        "sharpness": 0.121,
+        "roundness": -0.081,
+        "centroid_error_arcsec": 0.24,
+        "forced_snr_in_other_image": null,
+        "difference_snr": null
+      },
+      "angular_displacement_arcsec": 4.8,
+      "apparent_motion_arcsec_per_day": 0.0264,
+      "position_angle_deg": 41.3,
+      "brightness_ratio_later_over_earlier": 1.136,
+      "shift_significance_sigma": 6.8,
+      "stationary_tolerance_arcsec": 3.47,
+      "status": "passed_current_checks",
+      "caveats": [
+        "The shift is smaller than the image blur, so blends and pixel sampling can mimic it.",
+        "A real shift this small in six months would need a nearby star with a very high proper motion; no Solar System object moves this slowly."
+      ]
+    },
+    {
+      "candidate_id": "SX6M-007",
+      "kind": "shifted_match",
+      "earlier_date": "2025-06-19T00:00:58.754",
+      "later_date": "2025-12-17T18:35:43.129",
+      "time_baseline_days": 181.77412471100251,
+      "earlier": {
+        "ra": 155.143087,
+        "dec": -42.302233,
+        "x": 834.72,
+        "y": 106.29,
+        "snr": 15.8,
+        "brightness": 2.0319,
+        "peak": 0.6486,
+        "sharpness": 0.349,
+        "roundness": -0.205,
+        "centroid_error_arcsec": 0.19,
+        "forced_snr_in_other_image": null,
+        "difference_snr": null
+      },
+      "later": {
+        "ra": 155.143272,
+        "dec": -42.303686,
+        "x": 835.2,
+        "y": 106.98,
+        "snr": 11.3,
+        "brightness": 1.9585,
+        "peak": 0.331,
+        "sharpness": 0.19,
+        "roundness": -0.182,
+        "centroid_error_arcsec": 0.27,
+        "forced_snr_in_other_image": null,
+        "difference_snr": null
+      },
+      "angular_displacement_arcsec": 5.26,
+      "apparent_motion_arcsec_per_day": 0.0289,
+      "position_angle_deg": 174.6,
+      "brightness_ratio_later_over_earlier": 0.964,
+      "shift_significance_sigma": 7.3,
+      "stationary_tolerance_arcsec": 3.56,
+      "status": "passed_current_checks",
+      "caveats": [
+        "The shift is smaller than the image blur, so blends and pixel sampling can mimic it.",
+        "A real shift this small in six months would need a nearby star with a very high proper motion; no Solar System object moves this slowly."
+      ]
+    },
+    {
+      "candidate_id": "SX6M-008",
+      "kind": "shifted_match",
+      "earlier_date": "2025-06-19T00:00:58.754",
+      "later_date": "2025-12-17T18:35:43.129",
+      "time_baseline_days": 181.77412471100251,
+      "earlier": {
+        "ra": 154.846851,
+        "dec": -42.261191,
+        "x": 711.14,
+        "y": 151.85,
+        "snr": 15.7,
+        "brightness": 2.3451,
+        "peak": 0.8076,
+        "sharpness": 0.431,
+        "roundness": 0.028,
+        "centroid_error_arcsec": 0.19,
+        "forced_snr_in_other_image": null,
+        "difference_snr": null
+      },
+      "later": {
+        "ra": 154.84895,
+        "dec": -42.261419,
+        "x": 712.0,
+        "y": 151.49,
+        "snr": 14.1,
+        "brightness": 3.1763,
+        "peak": 0.3789,
+        "sharpness": 0.141,
+        "roundness": 0.006,
+        "centroid_error_arcsec": 0.21,
+        "forced_snr_in_other_image": null,
+        "difference_snr": null
+      },
+      "angular_displacement_arcsec": 5.65,
+      "apparent_motion_arcsec_per_day": 0.0311,
+      "position_angle_deg": 98.4,
+      "brightness_ratio_later_over_earlier": 1.354,
+      "shift_significance_sigma": 8.0,
+      "stationary_tolerance_arcsec": 3.47,
+      "status": "passed_current_checks",
+      "caveats": [
+        "The shift is smaller than the image blur, so blends and pixel sampling can mimic it.",
+        "A real shift this small in six months would need a nearby star with a very high proper motion; no Solar System object moves this slowly."
+      ]
+    },
+    {
+      "candidate_id": "SX6M-009",
+      "kind": "shifted_match",
+      "earlier_date": "2025-06-19T00:00:58.754",
+      "later_date": "2025-12-17T18:35:43.129",
+      "time_baseline_days": 181.77412471100251,
+      "earlier": {
+        "ra": 153.831245,
+        "dec": -41.574594,
+        "x": 129.14,
+        "y": 37.89,
+        "snr": 14.6,
+        "brightness": 1.8248,
+        "peak": 0.7127,
+        "sharpness": 0.389,
+        "roundness": -0.126,
+        "centroid_error_arcsec": 0.21,
+        "forced_snr_in_other_image": null,
+        "difference_snr": null
+      },
+      "later": {
+        "ra": 153.833521,
+        "dec": -41.574056,
+        "x": 129.84,
+        "y": 37.1,
+        "snr": 12.7,
+        "brightness": 2.0859,
+        "peak": 0.5048,
+        "sharpness": 0.253,
+        "roundness": -0.074,
+        "centroid_error_arcsec": 0.24,
+        "forced_snr_in_other_image": null,
+        "difference_snr": null
+      },
+      "angular_displacement_arcsec": 6.43,
+      "apparent_motion_arcsec_per_day": 0.0354,
+      "position_angle_deg": 72.5,
+      "brightness_ratio_later_over_earlier": 1.143,
+      "shift_significance_sigma": 9.0,
+      "stationary_tolerance_arcsec": 3.53,
+      "status": "passed_current_checks",
+      "caveats": [
+        "The shift is smaller than the image blur, so blends and pixel sampling can mimic it.",
+        "A real shift this small in six months would need a nearby star with a very high proper motion; no Solar System object moves this slowly."
+      ]
+    },
+    {
+      "candidate_id": "SX6M-010",
+      "kind": "shifted_match",
+      "earlier_date": "2025-06-19T00:00:58.754",
+      "later_date": "2025-12-17T18:35:43.129",
+      "time_baseline_days": 181.77412471100251,
+      "earlier": {
+        "ra": 154.577892,
+        "dec": -42.619575,
+        "x": 711.8,
+        "y": 390.74,
+        "snr": 11.2,
+        "brightness": 2.087,
+        "peak": 0.5719,
+        "sharpness": 0.34,
+        "roundness": 0.248,
+        "centroid_error_arcsec": 0.27,
+        "forced_snr_in_other_image": null,
+        "difference_snr": null
+      },
+      "later": {
+        "ra": 154.57927,
+        "dec": -42.618714,
+        "x": 712.07,
+        "y": 390.0,
+        "snr": 10.5,
+        "brightness": 2.2297,
+        "peak": 0.3143,
+        "sharpness": 0.163,
+        "roundness": 0.213,
+        "centroid_error_arcsec": 0.29,
+        "forced_snr_in_other_image": null,
+        "difference_snr": null
+      },
+      "angular_displacement_arcsec": 4.79,
+      "apparent_motion_arcsec_per_day": 0.0263,
+      "position_angle_deg": 49.7,
+      "brightness_ratio_later_over_earlier": 1.068,
+      "shift_significance_sigma": 6.3,
+      "stationary_tolerance_arcsec": 3.72,
+      "status": "passed_current_checks",
+      "caveats": [
+        "The shift is smaller than the image blur, so blends and pixel sampling can mimic it.",
+        "A real shift this small in six months would need a nearby star with a very high proper motion; no Solar System object moves this slowly."
+      ]
+    },
+    {
+      "candidate_id": "SX6M-011",
+      "kind": "seen_only_earlier",
+      "earlier_date": "2025-06-19T00:00:58.754",
+      "later_date": "2025-12-17T18:35:43.129",
+      "time_baseline_days": 181.77412471100251,
+      "earlier": {
+        "ra": 155.051513,
+        "dec": -42.677861,
+        "x": 905.96,
+        "y": 314.4,
+        "snr": 5.1,
+        "brightness": 0.6066,
+        "peak": 0.2986,
+        "sharpness": 0.449,
+        "roundness": -0.055,
+        "centroid_error_arcsec": 0.59,
+        "forced_snr_in_other_image": 2.7,
+        "difference_snr": -6.2
+      },
+      "later": null,
+      "angular_displacement_arcsec": null,
+      "apparent_motion_arcsec_per_day": null,
+      "position_angle_deg": null,
+      "brightness_ratio_later_over_earlier": null,
+      "status": "passed_current_checks",
+      "caveats": [
+        "Seen in one observation only: could be variability, an artifact or noise."
+      ]
+    }
+  ],
+  "limitations": [
+    "Two observations cannot establish a trajectory, an orbit or acceleration.",
+    "A pairing of an earlier-only and a later-only source is a possibility, not a measured motion; other pairings may be equally possible.",
+    "A source seen in only one observation may be variable, an artifact or noise rather than a mover.",
+    "The two images are 0.0032 um apart in wavelength, so small brightness differences are expected.",
+    "Every candidate needs follow-up observations before anything can be concluded."
+  ]
+}

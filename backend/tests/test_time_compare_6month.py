@@ -1,8 +1,8 @@
 """
 ~6-month Time Compare route tests, run against the REAL products in
-data/time_compare_6month/ (no mock data), plus a regression check that the
-original A/C/B 31-day Compare routes still respond. Skipped if the
-~6-month products are not present.
+data/time_compare_6month/ (no mock data), plus a check that no route of the
+retired 31-day comparison is served. Skipped if the ~6-month products are
+not present.
 
     cd backend && python -m pytest tests/ -v
 """
@@ -122,12 +122,15 @@ def test_unknown_assets_404(path):
     [
         "/api/observations",
         "/api/compare/pair?epoch_a=A&epoch_b=B",
-        "/api/compare/pair?epoch_a=A&epoch_b=C",
         "/api/observations/A/preview",
+        "/api/observations/C/preview",
         "/api/observations/B/preview-aligned",
         "/api/compare/difference-preview",
-        "/api/compare/candidate-markers?epoch=B_aligned",
+        "/api/compare/candidate-markers?epoch=A",
+        "/api/linking-summary",
+        "/api/catalogue-crossmatch/3EPOCH-001",
     ],
 )
-def test_31day_compare_routes_still_work(path):
-    assert client.get(path).status_code == 200
+def test_short_baseline_routes_are_gone(path):
+    """The old 31-day (May 9 / May 27 / Jun 9 2025) routes are not served."""
+    assert client.get(path).status_code == 404

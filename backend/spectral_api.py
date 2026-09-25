@@ -2,8 +2,8 @@
 Spectral View API routes (/api/spectral/*).
 
 Serves the 102-channel SPHEREx mosaic. This router is independent of the
-A/C/B Time Compare routes in main.py and does not read or modify any of their
-data.
+~6-month Time Compare and candidate routes and does not read or modify any
+of their data.
 
 Backend (SPECTRASHIFT_SPECTRAL_BACKEND):
   local (default)  spectral_data.SpectralService -- the original FITS files,

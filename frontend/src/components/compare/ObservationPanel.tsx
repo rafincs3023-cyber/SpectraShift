@@ -20,7 +20,7 @@ export function ObservationPanel({
   coordLabel?: string;
 }) {
   const obs = side.observation;
-  const label = side.label ?? `Epoch ${side.epoch}`;
+  const label = side.label ?? (side.epoch === "A" ? "Earlier image" : "Later image");
 
   return (
     <div className="obs-panel">

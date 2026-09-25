@@ -1,32 +1,20 @@
-// Types mirror the FastAPI backend response shapes exactly
-// (see backend/main.py). Keep in sync if the backend changes.
-
-export type CatalogueStatus =
-  | "KNOWN_OBJECT"
-  | "UNMATCHED_AFTER_CHECKS"
-  | "UNCERTAIN";
-
-export interface HealthFileStatus {
-  loaded: boolean;
-  rows: number;
-  error: string | null;
-}
-
-export interface HealthFitsStatus {
-  found: boolean;
-  error: string | null;
-}
+// Types mirror the FastAPI backend response shapes exactly (backend/main.py,
+// time_compare_6month.py, candidates_api.py). Keep in sync if the backend
+// changes. Spectral View types live in spectral.ts.
 
 export interface HealthResponse {
   status: "ok" | "degraded";
   timestamp_utc: string;
-  csv_files: Record<string, HealthFileStatus>;
-  fits_files: Record<string, HealthFitsStatus>;
+  time_compare_6month: { available: boolean; missing_files: string[] };
+  two_epoch_candidates: { results_file: string; precomputed: boolean; pipeline: string };
   note: string;
 }
 
+/** A = earlier observation (2025-06-19), B = later observation (2025-12-17). */
+export type EpochLabel = "A" | "B";
+
 export interface Observation {
-  epoch: "A" | "C" | "B";
+  epoch: EpochLabel;
   filename: string;
   obs_id: string | null;
   detector: number | null;
@@ -39,220 +27,13 @@ export interface Observation {
   bunit: string | null;
 }
 
-export interface ObservationsResponse {
-  count: number;
-  observations: Observation[];
-  errors: Record<string, string> | null;
-}
-
-// One row of GET /api/candidates
-export interface CandidateSummary {
-  candidate_id: string;
-  rank: number | null;
-  A_ra: number | null;
-  A_dec: number | null;
-  C_ra: number | null;
-  C_dec: number | null;
-  B_ra: number | null;
-  B_dec: number | null;
-  total_motion_arcsec: number | null;
-  motion_arcsec_per_day: number | null;
-  direction_diff_deg: number | null;
-  C_prediction_error_arcsec: number | null;
-  flux_variation: number | null;
-  validation_score: number | null;
-  final_catalogue_status: CatalogueStatus | null;
-  best_match_catalogue: string | null;
-  best_match_separation_arcsec: number | null;
-  /** v3 classification detail (catalogue_crossmatch_v3.py) */
-  catalogue_explanation?: CatalogueExplanation | null;
-  match_confidence?: MatchConfidence | null;
-  status_reason?: string | null;
-  final_rank: number | null;
-  final_priority_score: number | null;
-}
-
-export interface CandidatesResponse {
-  count: number;
-  candidates: CandidateSummary[];
-  valid_catalogue_statuses: CatalogueStatus[];
-}
-
-export interface EpochPosition {
-  ra_deg: number | null;
-  dec_deg: number | null;
-  source_id: number | null;
-  flux: number | null;
-}
-
-export interface CandidateMotion {
-  total_motion_arcsec: number | null;
-  motion_arcsec_per_day: number | null;
-  motion_AC_arcsec: number | null;
-  motion_CB_arcsec: number | null;
-  rate_AC_arcsec_per_day: number | null;
-  rate_CB_arcsec_per_day: number | null;
-  position_angle_AC_deg: number | null;
-  position_angle_CB_deg: number | null;
-  direction_diff_deg: number | null;
-}
-
-export interface CandidateValidation {
-  trajectory_score: number | null;
-  rate_consistency_score: number | null;
-  c_error_score: number | null;
-  flux_consistency_score: number | null;
-  validation_score: number | null;
-  C_prediction_error_arcsec: number | null;
-  flux_variation: number | null;
-  flux_mean: number | null;
-}
-
-export type CatalogueExplanation =
-  | "KNOWN_SOLAR_SYSTEM_OBJECT"
-  | "STATIC_KNOWN_STAR"
-  | "LINKED_KNOWN_STARS"
-  | "HIGH_PM_STAR_CANDIDATE"
-  | "NO_ASSOCIATION"
-  | "INSUFFICIENT_OR_AMBIGUOUS";
-
-export type MatchConfidence = "HIGH" | "MEDIUM" | "LOW" | "NONE";
-
-export interface CatalogueEpochMatch {
-  epoch: "A" | "C" | "B";
-  match_object: string | null;
-  separation_arcsec: number | null;
-  chi2: number | null;
-  sigma_total_arcsec: number | null;
-  /** catalogue position propagated to this epoch */
-  expected_ra_deg: number | null;
-  expected_dec_deg: number | null;
-  p_chance: number | null;
-  n_consistent: number | null;
-  mag_residual: number | null;
-  /** forced-photometry SNR at this epoch's position in the other epochs, e.g. "C:12.3;B:10.1" */
-  persistence_snr: string | null;
-}
-
-export interface CandidateCatalogue {
-  final_catalogue_status: CatalogueStatus | null;
-  best_match_catalogue: string | null;
-  best_match_object: string | null;
-  best_match_separation_arcsec: number | null;
-  best_match_epoch: string | null;
-  services_succeeded: string[];
-  services_failed: string[];
-  notes: string | null;
-  explanation?: CatalogueExplanation | null;
-  match_confidence?: MatchConfidence | null;
-  status_reason?: string | null;
-  catalogues_checked?: string[];
-  optional_services_unavailable?: string[];
-  joint_p_chance?: number | null;
-  observed_motion?: {
-    rate_arcsec_per_day: number | null;
-    position_angle_deg: number | null;
-  };
-  expected_motion?: {
-    rate_arcsec_per_day: number | null;
-    position_angle_deg: number | null;
-    source: string | null;
-  };
-  per_epoch?: CatalogueEpochMatch[];
-}
-
-// GET /api/candidates/{id}
-export interface CandidateDetail {
-  candidate_id: string;
-  rank: number | null;
-  final_rank: number | null;
-  final_priority_score: number | null;
-  positions: {
-    A: EpochPosition;
-    C: EpochPosition;
-    B: EpochPosition;
-  };
-  motion: CandidateMotion;
-  validation: CandidateValidation;
-  catalogue: CandidateCatalogue;
-  ranking_reason: string | null;
-}
-
-// One row of GET /api/catalogue-crossmatch/{id}
-export interface CrossmatchRecord {
-  candidate_id: string;
-  epoch: "A" | "C" | "B";
-  mjd: number | null;
-  candidate_ra: number | null;
-  candidate_dec: number | null;
-  catalogue: string;
-  matched_object: string | null;
-  object_type: string | null;
-  matched_ra: number | null;
-  matched_dec: number | null;
-  separation_arcsec: number | null;
-  match_status: "MATCH" | "NO_MATCH" | "SERVICE_UNAVAILABLE";
-  notes: string | null;
-}
-
-export interface CrossmatchSummary {
-  best_match_catalogue: string | null;
-  best_match_object: string | null;
-  best_match_separation_arcsec: number | null;
-  best_match_epoch: string | null;
-  services_succeeded: string | null;
-  services_failed: string | null;
-  notes: string | null;
-}
-
-export interface CrossmatchResponse {
-  candidate_id: string;
-  final_catalogue_status: CatalogueStatus | null;
-  record_count: number;
-  records: CrossmatchRecord[];
-  summary: CrossmatchSummary | null;
-}
-
-// GET /api/linking-summary -- outcome of the latest three_epoch_compare.py run
-export interface LinkingSummary {
-  accepted_tracks: number;
-  rejected_tracks: number;
-  rejected_by_reason: {
-    STATIONARY_SOURCE: number;
-    BLEND_MISLINK: number;
-    INCONSISTENT_TRAJECTORY: number;
-  };
-  rejected_tracks_file: string | null;
-  genuine_mover_veto_probability: number | null;
-  detection_sigma: number | null;
-  note: string;
-}
-
-// ---------------------------------------------------------------------
-// Compare page
-
-export type EpochLabel = "A" | "C" | "B";
-
-/** What the Compare image components need for one side of a pair. */
+/** What the Compare image components need for one side of the pair. */
 export interface CompareImageSide {
   epoch: EpochLabel;
   observation: Observation | null;
   preview_url: string;
   /** Display label; components fall back to "Epoch {epoch}". */
   label?: string;
-}
-
-export interface ComparePairSide extends CompareImageSide {
-  markers_url: string;
-}
-
-export interface ComparePairResponse {
-  epoch_a: ComparePairSide;
-  epoch_b: ComparePairSide;
-  pixel_aligned: boolean;
-  alignment_note: string;
-  difference_available: boolean;
-  difference_preview_url: string | null;
 }
 
 // GET /api/compare/6month -- the ~6-month (Jun 19 vs Dec 17 2025) pair.
@@ -321,32 +102,120 @@ export interface SixMonthCompareResponse {
   difference_figure_url: string;
 }
 
+// ---------------------------------------------------------------------
+// Two-epoch candidates (GET /api/candidates, /api/candidates/{id},
+// /api/candidates/markers). Built only from the ~6-month pair.
+
+export type CandidateKind =
+  | "possible_position_change"
+  | "shifted_match"
+  | "seen_only_earlier"
+  | "seen_only_later";
+
+/** One detection of a candidate in the earlier or later image. */
+export interface CandidateSighting {
+  ra: number;
+  dec: number;
+  /** pixel position on the shared (aligned) grid */
+  x: number;
+  y: number;
+  snr: number;
+  /** aperture sum of MJy/sr within a 2-pixel radius */
+  brightness: number | null;
+  peak: number | null;
+  sharpness: number | null;
+  roundness: number | null;
+  centroid_error_arcsec: number | null;
+  /** single-image candidates only */
+  forced_snr_in_other_image?: number | null;
+  difference_snr?: number | null;
+}
+
+export interface TwoEpochCandidate {
+  candidate_id: string;
+  kind: CandidateKind;
+  kind_label: string;
+  earlier_date: string;
+  later_date: string;
+  time_baseline_days: number;
+  earlier: CandidateSighting | null;
+  later: CandidateSighting | null;
+  angular_displacement_arcsec: number | null;
+  apparent_motion_arcsec_per_day: number | null;
+  position_angle_deg: number | null;
+  brightness_ratio_later_over_earlier: number | null;
+  alternative_partners?: number;
+  shift_significance_sigma?: number | null;
+  stationary_tolerance_arcsec?: number | null;
+  status: "passed_current_checks";
+  caveats: string[];
+}
+
+export interface CandidateMeasured {
+  fwhm_arcsec: Record<EpochLabel, number>;
+  median_noise_mjy_sr: Record<EpochLabel, number>;
+  detections: Record<EpochLabel, number>;
+  matched_in_both: number;
+  alignment_residual_shift_arcsec: [number, number];
+  alignment_scatter_arcsec: number;
+  bright_stars_used_for_alignment: number;
+  psf_matched_fwhm_arcsec: number;
+  position_error_model: { sigma_floor_arcsec: number; k_arcsec: number; formula: string };
+  matched_beyond_stationary_tolerance: number;
+  gaussian_expectation_beyond_tolerance: number;
+}
+
+export interface CandidatesResponse {
+  pipeline: string;
+  earlier_date: string;
+  later_date: string;
+  time_baseline_days: number;
+  count: number;
+  counts: Record<CandidateKind | "total", number>;
+  kind_labels: Record<CandidateKind, string>;
+  candidates: TwoEpochCandidate[];
+  rejected_by_reason: Record<string, number>;
+  rejection_reasons: Record<string, string>;
+  measured: CandidateMeasured;
+  thresholds: Record<string, number | string>;
+  inputs: {
+    earlier: { date: string; file: string; grid_file: string; wavelength_um: number };
+    later: { date: string; file: string; grid_file: string; wavelength_um: number };
+    overlap_mask: string;
+    difference: string;
+    time_baseline_days: number;
+    pixel_scale_arcsec: number;
+  };
+  flag_notes: string[];
+  limitations: string[];
+}
+
+export interface CandidateCutoutSet {
+  at: "earlier" | "later";
+  earlier: string;
+  later: string;
+  difference: string;
+}
+
+export interface CandidateDetailResponse extends TwoEpochCandidate {
+  cutouts: CandidateCutoutSet[];
+  cutout_size_arcsec: number;
+  rejection_reasons: Record<string, string>;
+  limitations: string[];
+}
+
 export interface CandidateMarker {
   candidate_id: string;
+  kind?: CandidateKind;
   x_frac: number;
   y_frac: number;
+  /** false: marked where the source is in the OTHER image */
+  detected_here?: boolean;
 }
 
 export interface CandidateMarkersResponse {
-  epoch: string;
+  image: "earlier" | "later";
   count: number;
   markers: CandidateMarker[];
-}
-
-// ---------------------------------------------------------------------
-// Explore page: per-candidate spectral sample points
-
-export interface SpectrumPoint {
-  epoch: EpochLabel;
-  mjd: number | null;
-  wavelength_um: number | null;
-  wavelength_bandwidth_um: number | null;
-  flux: number | null;
-  flux_uncertainty: number | null;
-}
-
-export interface CandidateSpectrumResponse {
-  candidate_id: string;
-  points: SpectrumPoint[];
-  note: string;
+  outside_display: string[];
 }

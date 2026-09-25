@@ -51,10 +51,10 @@ data/spherex/cache/
 # Lossless production tile bundle for R2 (rebuild with backend/build_r2_spectral_bundle.py)
 data/spherex/r2_bundle/
 
-# Additional raw SPHEREx Level-2 frames used to choose the ~6-month pair
-# (~72 MB each, re-downloadable from IRSA). The three 31-day A/C/B frames
-# are already tracked; the verified ~6-month products live in
-# data/time_compare_6month/.
+# Raw SPHEREx Level-2 frames (~72 MB each, re-downloadable from IRSA). The
+# verified ~6-month products live in data/time_compare_6month/. Frames that
+# were tracked before this rule (the retired short-baseline set, see
+# archive/short_baseline_31day/) stay in history but are not used.
 level2_*.fits
 # ...except the two source frames of the verified ~6-month pair: the backend
 # reads their headers (detector, PSF FWHM) for the Time Compare metadata.

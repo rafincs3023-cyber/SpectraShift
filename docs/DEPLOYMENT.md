@@ -15,10 +15,8 @@ No hosting provider is configured in this repository yet. This page records what
 |---|---|---|
 | `data/spherex/SpectraShift_Part1_16.fits.gz`, `SpectraShift_Remaining86.fits.gz` (102-channel mosaic, source of truth) | ~3.1 GB | No — kept privately in Cloudflare R2; **not** needed on the server in R2 mode |
 | Lossless Spectral View bundle (`data/spherex/r2_bundle/`: manifest, 1,794 tiles, 102 previews) | ~3.1 GB | No — uploaded to private R2 under `spectral-cache/v1/` |
-| 31-day Level-2 frames (3 × `level2_*.fits` at the project root) | ~215 MB | Yes |
-| ~6-month pair source frames (2 × `level2_*.fits`, headers used for detector/PSF) | ~143 MB | Yes |
-| `data/time_compare_6month/` (verified ~6-month products) | ~10 MB | Yes |
-| Pipeline CSV/JSON outputs at the project root | < 15 MB | Yes |
+| ~6-month pair source frames (2 × `level2_*.fits`; headers for detector/PSF, FLAGS for the candidate vetoes) | ~143 MB | Yes |
+| `data/time_compare_6month/` (verified ~6-month products + `two_epoch_candidates.json`) | ~10 MB | Yes |
 | Optional `data/spherex/cache/` cube | ~3 GB | No (rebuild with `backend/build_spectral_cache.py`) |
 
 In production the Spectral View runs in **R2 mode** and never downloads the FITS files (see below). Local mode (the default) still reads the FITS files / local cache directly.
@@ -112,5 +110,5 @@ Start command for the backend: `python -m uvicorn main:app --host 0.0.0.0 --port
 1. `GET /api/health` → `status: ok`
 2. `GET /api/spectral/metadata` → `total_channels: 102`
 3. `GET /api/compare/6month` → baseline 181.77 days; previews return PNG
-4. `GET /api/candidates` → `count: 0`; `GET /api/linking-summary` → 725 tracks, 0 accepted
-5. Pages `/`, `/spectral`, `/compare`, `/compare?dataset=31day`, `/candidates`, `/about`, `/help` load without console errors; no request downloads a FITS file.
+4. `GET /api/candidates` → two-epoch results with `earlier_date` 2025-06-19 and `later_date` 2025-12-17; `GET /api/candidates/markers?image=earlier` → markers
+5. Pages `/`, `/spectral`, `/compare`, `/explore`, `/candidates`, `/candidates/SX6M-001`, `/about`, `/help` load without console errors; no request downloads a FITS file.

@@ -245,7 +245,7 @@ export function SpectralView() {
         </div>
         <Link to="/compare" className="spectral-mode">
           <strong>Time Compare →</strong>
-          <span>Same sky on different dates, to look for changes over time.</span>
+          <span>Same sky about six months apart (Jun 19 → Dec 17, 2025), to look for changes over time.</span>
         </Link>
       </div>
 

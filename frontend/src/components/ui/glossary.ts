@@ -39,19 +39,27 @@ export const GLOSSARY = {
   },
   observationDate: {
     term: "Observation date",
-    text: "When SPHEREx took the image. Comparing different dates can reveal things that changed or moved.",
+    text: "When SPHEREx took the image. SpectraShift compares two dates: June 19 and December 17, 2025, about six months apart.",
   },
   differenceView: {
-    term: "Difference view",
-    text: "The later image minus the earlier image, so only what changed stands out.",
+    term: "Difference image",
+    text: "The later image minus the earlier image, so only what changed stands out. Red: brighter later; blue: brighter earlier.",
   },
   candidate: {
-    term: "Possible moving object (candidate)",
-    text: "A source that seemed to move between observation dates. It stays a candidate until checked, and none is a confirmed discovery.",
+    term: "Two-epoch candidate",
+    text: "A source whose position or appearance changed between the two observations enough to deserve a closer look. It is never a confirmed moving object or discovery.",
+  },
+  displacement: {
+    term: "Displacement",
+    text: "How far a source's position changed between the two images, as an angle on the sky in arcseconds (″). 1″ = 1/3600 of a degree.",
+  },
+  apparentMotion: {
+    term: "Apparent motion",
+    text: "The displacement divided by the 181.77 days between the two observations, in arcseconds per day. With only two dates this is an average, not a measured path.",
   },
   stationarySource: {
     term: "Stationary source",
-    text: "A star or galaxy that stays in the same place in every image, so it is not moving.",
+    text: "A star or galaxy found at the same place in both images, so it is not moving.",
   },
   blend: {
     term: "Blend",

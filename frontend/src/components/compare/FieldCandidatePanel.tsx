@@ -1,56 +1,61 @@
 import { Link } from "react-router-dom";
-import type { CandidateSummary } from "../../api/types";
-import { StatusBadge } from "../StatusBadge";
+import type { TwoEpochCandidate } from "../../api/types";
+import { displacementText } from "../candidate/candidateFormat";
+import { markerLabel } from "./markerUtils";
 
-function fmt(value: number | null | undefined, digits = 2): string {
-  if (value === null || value === undefined || Number.isNaN(value)) return "—";
-  return value.toFixed(digits);
-}
-
+/** Two-epoch candidates marked on the images, with links to their details. */
 export function FieldCandidatePanel({
   candidates,
+  error,
 }: {
-  candidates: CandidateSummary[];
+  candidates: TwoEpochCandidate[] | null;
+  error?: string | null;
 }) {
   return (
-    <aside className="field-panel">
-      <h2>Possible moving objects here</h2>
-      <p className="section-note">
-        {candidates.length === 0
-          ? "No validated moving-object candidates appear in this view. The search rejected every possible track — see the Candidates page for why."
-          : `${candidates.length} possible moving object${
-              candidates.length === 1 ? "" : "s"
-            } appear in these images.`}
-      </p>
+    <aside className="card field-panel">
+      <h2>Candidates in this view</h2>
+      {error && <p className="section-note">Candidate markers are unavailable right now.</p>}
+      {!error && candidates && (
+        <p className="section-note">
+          {candidates.length === 0
+            ? "No current two-epoch candidates appear in this view."
+            : `${candidates.length} preliminary two-epoch candidate${
+                candidates.length === 1 ? "" : "s"
+              } marked. None is a confirmed moving object.`}
+        </p>
+      )}
 
-      <div className="field-candidate-list">
-        {candidates.map((c) => (
-          <Link
-            key={c.candidate_id}
-            to={`/candidates/${encodeURIComponent(c.candidate_id)}`}
-            className="field-candidate-card"
-          >
-            <div className="field-candidate-card-top">
-              <span className="candidate-link">{c.candidate_id}</span>
-              <StatusBadge status={c.final_catalogue_status} />
-            </div>
-            <dl className="kv-list kv-list-compact">
-              <div>
-                <dt>Rank</dt>
-                <dd>{c.final_rank ?? c.rank ?? "—"}</dd>
+      {candidates && candidates.length > 0 && (
+        <div className="field-candidate-list">
+          {candidates.map((c) => (
+            <Link
+              key={c.candidate_id}
+              to={`/candidates/${encodeURIComponent(c.candidate_id)}`}
+              className="field-candidate-card"
+            >
+              <div className="field-candidate-card-top">
+                <span className="candidate-link">
+                  {markerLabel(c.candidate_id)} · {c.candidate_id}
+                </span>
               </div>
-              <div>
-                <dt>Apparent motion</dt>
-                <dd>{fmt(c.total_motion_arcsec, 1)}″</dd>
-              </div>
-              <div>
-                <dt>Validation score</dt>
-                <dd>{fmt(c.validation_score, 1)}</dd>
-              </div>
-            </dl>
-          </Link>
-        ))}
-      </div>
+              <dl className="kv-list kv-list-compact">
+                <div>
+                  <dt>Type</dt>
+                  <dd>{c.kind_label}</dd>
+                </div>
+                <div>
+                  <dt>Position change</dt>
+                  <dd>{displacementText(c)}</dd>
+                </div>
+              </dl>
+            </Link>
+          ))}
+        </div>
+      )}
+      <p className="section-note">
+        Solid ring: seen in this image. Dashed ring: seen only in the other
+        image.
+      </p>
     </aside>
   );
 }

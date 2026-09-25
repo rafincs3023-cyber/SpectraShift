@@ -26,9 +26,10 @@ export function DifferenceLegend({
         </span>
       </div>
       <p className="callout-warning">
-        A visible difference does not automatically mean a moving object. It
-        can also come from brightness changes, slight differences between the
-        two images, or bright-star artifacts.
+        <strong>Important:</strong> a difference does not automatically mean
+        that an object moved. It can also come from brightness changes, the
+        slightly different wavelengths and image sharpness of the two
+        observations, or bright-star artifacts.
       </p>
     </div>
   );

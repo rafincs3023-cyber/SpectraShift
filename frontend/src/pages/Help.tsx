@@ -14,6 +14,8 @@ const TERMS: GlossaryKey[] = [
   "observationDate",
   "differenceView",
   "candidate",
+  "displacement",
+  "apparentMotion",
   "stationarySource",
   "blend",
   "unit",
@@ -52,13 +54,9 @@ export function Help() {
 
         <section className="card">
           <h2>How to use Time Compare</h2>
-          <p className="lead-note">Same sky, different dates.</p>
+          <p className="lead-note">Same sky, June 19 and December 17, 2025.</p>
           <ol className="steps-list">
             <li>Open <Link to="/compare">Time Compare</Link>.</li>
-            <li>
-              Choose <strong>~6-Month Compare</strong> (recommended) or{" "}
-              <strong>31-Day Compare</strong>.
-            </li>
             <li>
               Pick a viewing mode: <strong>Side by side</strong>,{" "}
               <strong>Slider</strong> (drag to wipe between dates),{" "}
@@ -67,9 +65,9 @@ export function Help() {
               <strong>Overlay</strong> (unchanged stars look white).
             </li>
             <li>
-              In Difference: red = brighter in one image, blue = brighter in
-              the other (the colour key says which), dark = little or no
-              change.
+              In Difference (Later − Earlier): red = brighter in the later
+              image, blue = brighter in the earlier image, dark = little or
+              no change.
             </li>
           </ol>
           <p className="lead-note">
@@ -80,43 +78,55 @@ export function Help() {
         <section className="card">
           <h2>How to use Explore</h2>
           <ol className="steps-list">
-            <li>Open <Link to="/explore">Explore</Link> and choose an observation date.</li>
+            <li>
+              Open <Link to="/explore">Explore</Link> and choose June 19
+              (earlier) or December 17, 2025 (later).
+            </li>
             <li>Scroll to zoom in and drag to move around the image.</li>
             <li>
-              If markers appear, click one to see that possible moving object's
-              details. If none appear, nothing in that image passed the checks.
+              Click a marker to see that candidate. A solid ring means the
+              source is seen in this image; a dashed ring means it is seen
+              only in the other one.
             </li>
           </ol>
         </section>
 
         <section className="card">
-          <h2>What “Candidates” means</h2>
+          <h2>How to use Candidates</h2>
+          <ol className="steps-list">
+            <li>Open <Link to="/candidates">Candidates</Link> to see how many passed the checks.</li>
+            <li>Open an ID to see its position on each date, the pictures and the numbers.</li>
+            <li>Use “Show in Explore” or Time Compare's Blink mode to look for yourself.</li>
+          </ol>
+        </section>
+
+        <section className="card">
+          <h2>What a two-epoch candidate means</h2>
           <p>
-            A <strong>candidate</strong> is a <em>possible</em> moving object:
-            something that seemed to move between observation dates and
-            passed our checks. It is never a confirmed discovery.
+            A <strong>two-epoch candidate</strong> is a source whose position
+            or appearance changed between June 19 and December 17, 2025
+            enough to deserve a closer look, and that passed every current
+            quality check.
           </p>
           <p>
-            In the current data no candidate passed. Every possible track was
-            traced to stationary stars, blended sources or mismatches.{" "}
-            <Link to="/candidates">See the details →</Link>
+            <strong>Why it is not a confirmed discovery:</strong> with only two
+            dates there is no third point to test a path, so a change could
+            also be a variable star, a blend of two sources, an image
+            artifact or noise. Only follow-up observations can tell.
           </p>
-          <TechnicalDetails summary="Catalogue check statuses">
+          <TechnicalDetails summary="Candidate types">
             <dl className="kv-list">
               <div>
-                <dt>KNOWN_OBJECT</dt>
-                <dd>
-                  A strong catalogue match explains the detections, including
-                  the case where each date shows a different known star.
-                </dd>
+                <dt>Possible position change</dt>
+                <dd>A source seen only earlier, paired with a similar source seen only later.</dd>
               </div>
               <div>
-                <dt>UNMATCHED_AFTER_CHECKS</dt>
-                <dd>Every required check ran and none matched. This does not mean new or unknown.</dd>
+                <dt>Small position shift</dt>
+                <dd>The same source on both dates, measured slightly further apart than expected.</dd>
               </div>
               <div>
-                <dt>UNCERTAIN</dt>
-                <dd>The evidence is not strong enough either way.</dd>
+                <dt>Seen only in the earlier / later image</dt>
+                <dd>A source on one date with nothing at the same place on the other.</dd>
               </div>
             </dl>
           </TechnicalDetails>

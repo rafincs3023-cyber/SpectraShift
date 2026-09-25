@@ -8,7 +8,7 @@ export function About() {
       <PageIntro
         eyebrow="NASA Space Apps 2026 · “Planet X and SPHEREx”"
         title="About SpectraShift"
-        lead="SpectraShift is a SPHEREx sky explorer: it lets anyone look at real NASA infrared data across wavelength and across time, and shows the result of a careful search for moving objects."
+        lead="SpectraShift is a SPHEREx sky explorer: it lets anyone look at real NASA infrared data across wavelength and across time, and screens two observations about six months apart for possible moving sources."
       />
 
       <div className="card-grid-2">
@@ -20,15 +20,16 @@ export function About() {
               infrared wavelengths, with the spectrum of any point you click.
             </li>
             <li>
-              <strong>Time Compare</strong> — the same sky on two dates, lined
-              up exactly, to spot changes.
+              <strong>Time Compare</strong> — the same sky on June 19 and
+              December 17, 2025, lined up exactly, to spot changes.
             </li>
             <li>
-              <strong>Explore</strong> — browse a single observation.
+              <strong>Explore</strong> — inspect either of those two
+              observations in detail.
             </li>
             <li>
-              <strong>Possible moving objects</strong> — the results of a
-              search for objects that move between three observations.
+              <strong>Candidates</strong> — possible position or brightness
+              changes found between those two observations.
             </li>
           </ul>
         </section>
@@ -43,53 +44,62 @@ export function About() {
           </p>
           <ul className="plain-list">
             <li>A 102-wavelength mosaic of one 5° × 4.25° sky region.</li>
-            <li>Two images of the same field about 6 months apart (Jun 19 and Dec 17, 2025).</li>
-            <li>Three images of one field within a month (May 9 – Jun 9, 2025).</li>
+            <li>
+              Two single images of one field, taken on June 19 and December
+              17, 2025 — 181.77 days (about 5.97 months) apart, at the same
+              wavelength (≈1.68 µm) and on the same detector.
+            </li>
           </ul>
         </section>
 
         <section className="card">
           <h2>Wavelength vs time</h2>
           <p>
-            <strong>Spectral View</strong> compares <em>wavelengths</em>: the
-            same sky at the same moment, seen in different “colours” of
+            <strong>Spectral analysis</strong> compares <em>wavelengths</em>:
+            the same sky at the same moment, seen in different “colours” of
             infrared light. Differences there come from what the objects are
             made of and how hot they are — not from motion.
           </p>
           <p>
-            <strong>Time Compare</strong> compares <em>dates</em>: the same sky
-            and wavelength on different days. Differences there can come from
-            changes over time, including motion.
+            <strong>Temporal analysis</strong> compares <em>dates</em>: the
+            same sky on June 19 and December 17, 2025. Differences there can
+            come from changes over time, including motion.
           </p>
         </section>
 
         <section className="card">
-          <h2>How the moving-object search works</h2>
+          <h2>How the candidate screening works</h2>
           <ol className="steps-list">
-            <li>Find every star-like source in three images taken within a month.</li>
-            <li>Link sources that could be one object moving in a straight line.</li>
-            <li>Reject tracks made of stationary stars, blended sources or bright-star glare.</li>
-            <li>Check anything left against catalogues of stars, galaxies, asteroids and comets.</li>
+            <li>Find every star-like source in the earlier and in the later image.</li>
+            <li>Set aside sources found at the same place on both dates (stationary).</li>
+            <li>
+              Reject look-alikes: image edges, pixels SPHEREx flagged, bright-star
+              glare, blends, shapes unlike a star, and changes the difference
+              image does not confirm.
+            </li>
+            <li>List what is left as candidates for inspection.</li>
           </ol>
           <p>
-            In the current data every possible track was rejected, so no
-            candidate is listed. <Link to="/candidates">See the result →</Link>
+            <Link to="/candidates">See the current result →</Link>
           </p>
         </section>
 
         <section className="card">
           <h2>Limitations</h2>
           <ul className="plain-list">
-            <li>One sky region; Time Compare uses a single detector.</li>
             <li>
-              An empty result does not mean nothing moves here: in this crowded
-              field the search recovers only part of the moving objects it is
-              tested on.
+              Two observations alone cannot establish a full trajectory or an
+              orbit: a candidate is a possible change, never a measured path.
             </li>
-            <li>The search looks for straight-line motion over one month only.</li>
+            <li>One sky field and one detector for the time comparison.</li>
             <li>
-              The two ~6-month images differ very slightly in wavelength, so a
-              difference is an apparent change, not proof of a physical one.
+              The two images differ very slightly in wavelength and sharpness,
+              so a difference is an apparent change, not proof of a physical
+              one.
+            </li>
+            <li>
+              An empty or short candidate list does not mean nothing moves
+              here: faint or blended objects can be missed.
             </li>
           </ul>
         </section>
@@ -99,30 +109,26 @@ export function About() {
           <p>
             Nothing here is a confirmed discovery. No object is called
             “Planet X”, a new planet or a confirmed moving object. A candidate
-            that no catalogue matches is “unmatched after checks”, which does
-            not mean “unknown” or “new”.
+            is only a source that passed the current checks and deserves a
+            closer look.
           </p>
         </section>
       </div>
 
       <section className="card">
         <h2>Technical notes</h2>
-        <TechnicalDetails summary="How catalogue checks and statuses work">
+        <TechnicalDetails summary="How the two images are compared">
           <p>
-            Catalogue classification propagates Gaia DR3 and SIMBAD positions
-            to each SPHEREx observation date using their catalogued proper
-            motions, and tests every association against the combined SPHEREx
-            and catalogue positional uncertainty. The known asteroid and comet
-            search uses the JPL Small-Body Identification service, with
-            positions computed from the SPHEREx spacecraft itself; SkyBoT and
-            the MPC Checker were unreachable and are not relied on.
-          </p>
-          <p>
-            Each candidate gets exactly one status:{" "}
-            <code>KNOWN_OBJECT</code> (a strong match in the checks
-            performed), <code>UNMATCHED_AFTER_CHECKS</code> (every required
-            check ran and none matched) or <code>UNCERTAIN</code> (evidence
-            incomplete, ambiguous or inconsistent).
+            The later image (December 17) was reprojected onto the earlier
+            image's (June 19) pixel grid, so both share one grid and one
+            common footprint. The candidate pipeline measures each image's
+            noise and sharpness, blurs the sharper image to match the other,
+            detects sources in each with a matched filter (5σ), and pairs
+            sources on the shared grid. How far a stationary star's position
+            scatters between the two dates is measured from thousands of
+            matched stars; a source counts as stationary within 5σ of that
+            scatter. Every rejection reason and threshold is listed on the
+            Candidates page.
           </p>
         </TechnicalDetails>
       </section>

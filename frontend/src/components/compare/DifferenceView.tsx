@@ -4,30 +4,21 @@ import { imageUrl } from "../../api/client";
 export function DifferenceView({
   available,
   previewUrl,
-  epochA,
-  epochB,
-  alt = "Epoch A minus Epoch B difference",
+  alt = "Later image minus earlier image",
   caption,
 }: {
   available: boolean;
   previewUrl: string | null;
-  epochA: string;
-  epochB: string;
   alt?: string;
-  /** Replaces the default A − B explanation (e.g. for a B − A product). */
+  /** Colour key and notes shown under the image. */
   caption?: ReactNode;
 }) {
   if (!available || !previewUrl) {
     return (
       <div className="state-panel state-placeholder">
-        <p>
-          No precomputed difference product exists for Epoch {epochA} vs
-          Epoch {epochB}.
-        </p>
+        <p>The difference image is not available right now.</p>
         <p className="section-note">
-          Only Epoch A − Epoch B was computed in the scientific pipeline.
-          Select Epoch A and Epoch B to view the difference, or use
-          Side by Side / Blink mode for this pair.
+          Use Side by side, Slider or Blink to compare the two images instead.
         </p>
       </div>
     );
@@ -44,13 +35,7 @@ export function DifferenceView({
           crossOrigin="anonymous"
         />
       </div>
-      {caption ?? (
-        <p className="section-note">
-          Precomputed difference: Epoch A − Epoch B. Red = brighter in Epoch A,
-          blue = brighter in Epoch B. This reflects apparent change between
-          the two observations, not a confirmed physical object.
-        </p>
-      )}
+      {caption}
     </div>
   );
 }

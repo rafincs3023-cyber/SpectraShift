@@ -195,9 +195,9 @@ def test_routes_registered_in_main_app():
     paths = set(main.app.openapi()["paths"])
     assert {"/api/spectral/metadata", "/api/spectral/status", "/api/spectral/spectrum",
             "/api/spectral/channels/{channel}", "/api/spectral/channels/{channel}/preview"} <= paths
-    # Time Compare routes untouched
-    assert {"/api/observations/{epoch}/preview", "/api/compare/pair",
-            "/api/candidates/{candidate_id}/spectrum"} <= paths
+    # ~6-month Time Compare and two-epoch candidate routes alongside
+    assert {"/api/compare/6month", "/api/compare/6month/preview/{kind}",
+            "/api/candidates", "/api/candidates/markers", "/api/candidates/{candidate_id}"} <= paths
 
 
 @pytest.mark.skipif(os.environ.get("SPECTRASHIFT_SLOW_TESTS") != "1", reason="set SPECTRASHIFT_SLOW_TESTS=1")

@@ -31,7 +31,7 @@ export function BlinkCompare({
   }, [playing, intervalMs]);
 
   const active = showingA ? epochA : epochB;
-  const activeLabel = active.label ?? `Epoch ${active.epoch}`;
+  const activeLabel = active.label ?? (active.epoch === "A" ? "Earlier image" : "Later image");
   const activeMarkers = showingA ? markersA : markersB;
 
   return (

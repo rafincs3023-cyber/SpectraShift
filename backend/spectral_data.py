@@ -1,9 +1,9 @@
 """
 Spectral View data service -- the 102-channel SPHEREx mosaic cubes.
 
-This is a SEPARATE feature from the A/C/B Time Compare system (see
-data_access.py / images.py / spectrum.py). Those modules serve three
-single-exposure Level-2 images taken at different times; this module
+This is a SEPARATE feature from Time Compare (time_compare_6month.py),
+which serves two single-exposure Level-2 images taken about six months
+apart; this module
 serves two SPHEREx *mosaic* cubes of one sky region that together hold
 102 spectral channels (~0.75-5.0 um). The mosaics are for spectral
 exploration only -- they carry no temporal/motion information.

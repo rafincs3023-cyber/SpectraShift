@@ -1,13 +1,8 @@
 import { useNavigate } from "react-router-dom";
 import type { CandidateMarker } from "../../api/types";
+import { markerClass, markerLabel } from "./markerUtils";
 
-export function MarkerOverlay({
-  markers,
-  colorClass = "marker-dot",
-}: {
-  markers: CandidateMarker[];
-  colorClass?: string;
-}) {
+export function MarkerOverlay({ markers }: { markers: CandidateMarker[] }) {
   const navigate = useNavigate();
 
   return (
@@ -16,18 +11,18 @@ export function MarkerOverlay({
         <button
           key={m.candidate_id}
           type="button"
-          className={colorClass}
+          className={markerClass(m)}
           style={{
             left: `${m.x_frac * 100}%`,
             top: `${m.y_frac * 100}%`,
           }}
-          title={`${m.candidate_id} — open detail`}
+          title={`${m.candidate_id}${m.detected_here === false ? " (not seen in this image)" : ""} — open details`}
           onClick={(e) => {
             e.stopPropagation();
             navigate(`/candidates/${encodeURIComponent(m.candidate_id)}`);
           }}
         >
-          <span className="marker-label">{m.candidate_id.replace("3EPOCH-", "#")}</span>
+          <span className="marker-label">{markerLabel(m.candidate_id)}</span>
         </button>
       ))}
     </div>
