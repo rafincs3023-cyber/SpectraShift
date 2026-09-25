@@ -191,7 +191,7 @@ python test_linker_injection.py      # optional: injection-recovery sensitivity 
 
 Tests: `cd backend && python -m pytest tests/` · `cd frontend && npm run build && npm run lint`.
 
-Deployment notes: [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md).
+Deployment notes: [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md). In production the Spectral View reads a lossless tile bundle of the full 102-channel cube from private Cloudflare R2 (`SPECTRASHIFT_SPECTRAL_BACKEND=r2`; build it with `python backend/build_r2_spectral_bundle.py`), so the server never downloads the 3 GB FITS files.
 
 ---
 

@@ -580,7 +580,7 @@ class SpectralService:
              if (self.spherex_dir / name).is_file() else None}
             for name in SOURCE_FILENAMES
         ]
-        out: dict[str, Any] = {"source_files": files}
+        out: dict[str, Any] = {"backend": "local", "source_files": files}
         try:
             lay = self.layout
         except SpectralError as exc:
@@ -736,70 +736,130 @@ class SpectralService:
         x: Optional[int] = None,
         y: Optional[int] = None,
     ) -> dict[str, Any]:
-        lay = self.layout
-        if ra is not None and dec is not None:
-            try:
-                xf, yf = (float(v) for v in lay.wcs.world_to_pixel_values(ra % 360.0, dec))
-            except Exception as exc:  # noqa: BLE001
-                raise SpectralDataInvalid(f"WCS transform failed for RA={ra}, Dec={dec} ({exc})") from exc
-            pixel_input = False
-        else:
-            xf, yf = float(x), float(y)
-            pixel_input = True
+        return spectrum_response(self.layout, self.channels, self.pixel_series, ra=ra, dec=dec, x=x, y=y)
 
-        if not (math.isfinite(xf) and math.isfinite(yf)):
-            raise OutsideFootprint(
-                f"RA={ra}, Dec={dec} does not project onto the mosaic plane",
-                ra_deg=ra, dec_deg=dec,
-            )
-        xi, yi = int(math.floor(xf + 0.5)), int(math.floor(yf + 0.5))
-        if not (0 <= xi < lay.width and 0 <= yi < lay.height):
-            where = f"pixel ({xi}, {yi})" if pixel_input else f"RA={ra}, Dec={dec} (pixel {xf:.1f}, {yf:.1f})"
-            raise OutsideFootprint(
-                f"{where} is outside the {lay.width}x{lay.height} mosaic",
-                ra_deg=ra, dec_deg=dec, pixel_x=_f(xf, 3), pixel_y=_f(yf, 3),
-                width=lay.width, height=lay.height,
-            )
-
-        values, mode = self.pixel_series(xi, yi)
-        channels = self.channels()
-        samples = []
-        for ch, v in zip(channels, values):
-            ok = bool(np.isfinite(v))
-            samples.append({
-                "channel": ch["channel"],
-                "detector": ch["detector"],
-                "subchannel": ch["subchannel"],
-                "wavelength_um": ch["wavelength_um"],
-                "bandwidth_um": ch["bandwidth_um"],
-                "value": float(v) if ok else None,
-                "valid": ok,
-            })
-        n_valid = sum(s["valid"] for s in samples)
-        pra, pdec = lay.wcs.pixel_to_world_values(xi, yi)
-
+    def channel_info(
+        self,
+        channel: int,
+        stretch: str = DEFAULT_STRETCH,
+        plow: float = DEFAULT_PLOW,
+        phigh: float = DEFAULT_PHIGH,
+        max_size: int = DEFAULT_MAX_SIZE,
+    ) -> dict[str, Any]:
+        """One channel's metadata plus the render info of its preview."""
+        self.layout.source_for(channel)
+        meta = next(c for c in self.channels() if c["channel"] == channel)
+        _, info = self.preview(channel, stretch, plow, phigh, max_size)
+        query = f"stretch={stretch}&plow={plow:g}&phigh={phigh:g}&max_size={max_size}"
         return {
-            "query": {"ra_deg": ra, "dec_deg": dec} if not pixel_input else {"x": x, "y": y},
-            "pixel": {
-                "x": _f(xf, 3), "y": _f(yf, 3),          # exact (sub-pixel) position
-                "x_index": xi, "y_index": yi,            # sampled pixel
-                "x_frac": _f((xi + 0.5) / lay.width, 6),             # preview overlay,
-                "y_frac": _f(1.0 - (yi + 0.5) / lay.height, 6),      # top-left origin
-            },
-            "pixel_center": {"ra_deg": _f(pra, 7), "dec_deg": _f(pdec, 7)},
-            "in_footprint": True,
-            "unit": lay.unit,
-            "quantity": "surface brightness of the single nearest mosaic pixel (no aperture, no interpolation)",
-            "n_channels": len(samples),
-            "n_valid": n_valid,
-            "has_data": n_valid > 0,
-            "samples": samples,
-            "access_mode": mode,
-            "note": (
-                "Values are read directly from the SPHEREx mosaic IMAGE cubes. "
-                "null means the pixel is non-finite (no coverage) in that channel, not zero."
-            ),
+            **meta,
+            "unit": self.layout.unit,
+            "preview": {**info, "url": f"/api/spectral/channels/{channel}/preview?{query}"},
         }
+
+    def preview_response(
+        self,
+        channel: int,
+        stretch: str = DEFAULT_STRETCH,
+        plow: float = DEFAULT_PLOW,
+        phigh: float = DEFAULT_PHIGH,
+        max_size: int = DEFAULT_MAX_SIZE,
+        fmt: str = "png",
+    ) -> tuple[Path | bytes, str]:
+        """(cached preview file, media type); rendered on first use."""
+        path, _ = self.preview(channel, stretch, plow, phigh, max_size, fmt=fmt)
+        return path, "image/png" if fmt == "png" else "image/jpeg"
+
+
+def locate_pixel(
+    lay: Any,
+    ra: Optional[float] = None,
+    dec: Optional[float] = None,
+    x: Optional[int] = None,
+    y: Optional[int] = None,
+) -> tuple[float, float, int, int, bool]:
+    """(x, y, x_index, y_index, pixel_input): the nearest mosaic pixel to a
+    sky position (via the celestial WCS) or to a pixel position. `lay` needs
+    .wcs, .width and .height. Raises OutsideFootprint off the mosaic."""
+    if ra is not None and dec is not None:
+        try:
+            xf, yf = (float(v) for v in lay.wcs.world_to_pixel_values(ra % 360.0, dec))
+        except Exception as exc:  # noqa: BLE001
+            raise SpectralDataInvalid(f"WCS transform failed for RA={ra}, Dec={dec} ({exc})") from exc
+        pixel_input = False
+    else:
+        xf, yf = float(x), float(y)
+        pixel_input = True
+
+    if not (math.isfinite(xf) and math.isfinite(yf)):
+        raise OutsideFootprint(
+            f"RA={ra}, Dec={dec} does not project onto the mosaic plane",
+            ra_deg=ra, dec_deg=dec,
+        )
+    xi, yi = int(math.floor(xf + 0.5)), int(math.floor(yf + 0.5))
+    if not (0 <= xi < lay.width and 0 <= yi < lay.height):
+        where = f"pixel ({xi}, {yi})" if pixel_input else f"RA={ra}, Dec={dec} (pixel {xf:.1f}, {yf:.1f})"
+        raise OutsideFootprint(
+            f"{where} is outside the {lay.width}x{lay.height} mosaic",
+            ra_deg=ra, dec_deg=dec, pixel_x=_f(xf, 3), pixel_y=_f(yf, 3),
+            width=lay.width, height=lay.height,
+        )
+    return xf, yf, xi, yi, pixel_input
+
+
+def spectrum_response(
+    lay: Any,
+    channels_fn: Any,
+    pixel_series_fn: Any,
+    ra: Optional[float] = None,
+    dec: Optional[float] = None,
+    x: Optional[int] = None,
+    y: Optional[int] = None,
+) -> dict[str, Any]:
+    """The /api/spectral/spectrum body, shared by the local (FITS / memmap)
+    and R2 (lossless tile) backends so both return identical fields.
+    pixel_series_fn(x_index, y_index) -> (float32 values for all channels, access mode)."""
+    xf, yf, xi, yi, pixel_input = locate_pixel(lay, ra=ra, dec=dec, x=x, y=y)
+
+    values, mode = pixel_series_fn(xi, yi)
+    channels = channels_fn()
+    samples = []
+    for ch, v in zip(channels, values):
+        ok = bool(np.isfinite(v))
+        samples.append({
+            "channel": ch["channel"],
+            "detector": ch["detector"],
+            "subchannel": ch["subchannel"],
+            "wavelength_um": ch["wavelength_um"],
+            "bandwidth_um": ch["bandwidth_um"],
+            "value": float(v) if ok else None,
+            "valid": ok,
+        })
+    n_valid = sum(s["valid"] for s in samples)
+    pra, pdec = lay.wcs.pixel_to_world_values(xi, yi)
+
+    return {
+        "query": {"ra_deg": ra, "dec_deg": dec} if not pixel_input else {"x": x, "y": y},
+        "pixel": {
+            "x": _f(xf, 3), "y": _f(yf, 3),          # exact (sub-pixel) position
+            "x_index": xi, "y_index": yi,            # sampled pixel
+            "x_frac": _f((xi + 0.5) / lay.width, 6),             # preview overlay,
+            "y_frac": _f(1.0 - (yi + 0.5) / lay.height, 6),      # top-left origin
+        },
+        "pixel_center": {"ra_deg": _f(pra, 7), "dec_deg": _f(pdec, 7)},
+        "in_footprint": True,
+        "unit": lay.unit,
+        "quantity": "surface brightness of the single nearest mosaic pixel (no aperture, no interpolation)",
+        "n_channels": len(samples),
+        "n_valid": n_valid,
+        "has_data": n_valid > 0,
+        "samples": samples,
+        "access_mode": mode,
+        "note": (
+            "Values are read directly from the SPHEREx mosaic IMAGE cubes. "
+            "null means the pixel is non-finite (no coverage) in that channel, not zero."
+        ),
+    }
 
 
 def save_image(img: Image.Image, path: Path, fmt: str) -> None:

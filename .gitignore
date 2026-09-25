@@ -48,6 +48,8 @@ data/spherex/*.fits
 data/spherex/*.fits.gz
 # Derived Spectral View access cache (rebuild with backend/build_spectral_cache.py)
 data/spherex/cache/
+# Lossless production tile bundle for R2 (rebuild with backend/build_r2_spectral_bundle.py)
+data/spherex/r2_bundle/
 
 # Additional raw SPHEREx Level-2 frames used to choose the ~6-month pair
 # (~72 MB each, re-downloadable from IRSA). The three 31-day A/C/B frames

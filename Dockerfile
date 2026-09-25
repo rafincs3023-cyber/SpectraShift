@@ -4,10 +4,11 @@
 # data (31-day Level-2 FITS frames, pipeline CSV/JSON outputs) and
 # data/time_compare_6month/ via BASE_DIR = project root.
 #
-# The ~3.1 GB 102-channel spectral mosaic is not in Git: mount a persistent
-# volume at /app/data/spherex containing SpectraShift_Part1_16.fits.gz and
-# SpectraShift_Remaining86.fits.gz (or set SPECTRASHIFT_SPHEREX_DIR to the
-# volume path). Everything else works without it.
+# The ~3.1 GB 102-channel spectral mosaic is not in Git. In production set
+# SPECTRASHIFT_SPECTRAL_BACKEND=r2 plus the R2_* variables: Spectral View then
+# reads the lossless tile bundle from private Cloudflare R2 on demand and
+# never downloads the FITS files (docs/DEPLOYMENT.md). Local mode can instead
+# use the FITS files from a volume mounted at /app/data/spherex.
 
 FROM python:3.11-slim
 
