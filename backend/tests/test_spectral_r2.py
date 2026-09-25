@@ -196,6 +196,39 @@ def test_lru_is_bounded():
     assert cache.get("huge") is None
 
 
+@pytest.mark.parametrize("first_call", ["metadata", "spectrum", "channels", "status"])
+def test_lazy_store_first_call_does_not_deadlock(synth, monkeypatch, first_call):
+    """Production creates the service without a store (it is built from the
+    environment on first use). Whatever the first request is -- the
+    frontend calls /metadata first -- it must complete, and /status after
+    it must too. Regression test for a non-reentrant-lock deadlock."""
+    import threading
+
+    import spectral_r2
+
+    _, store, _, _ = synth
+    monkeypatch.setattr(spectral_r2, "store_from_env", lambda: store)
+    svc = R2SpectralService()
+    calls = {
+        "metadata": svc.metadata,
+        "spectrum": lambda: svc.spectrum(x=1, y=1),
+        "channels": svc.channels,
+        "status": svc.status,
+    }
+    done = {}
+
+    def run(name, fn):
+        fn()
+        done[name] = True
+
+    for name in (first_call, "status"):
+        t = threading.Thread(target=run, args=(name, calls[name]), daemon=True)
+        t.start()
+        t.join(10)
+        assert done.get(name), f"{name}() hung after first call {first_call}()"
+    assert svc.status()["available"] is True
+
+
 def test_corrupt_tile_rejected(synth):
     _, store, svc, _ = synth
     raw = bytearray(store.objects[tile_key(0, 0)])

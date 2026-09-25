@@ -278,7 +278,8 @@ class R2SpectralService:
         preview_cache_bytes: Optional[int] = None,
     ) -> None:
         self._store = store
-        self._lock = threading.Lock()
+        # reentrant: lazy properties (manifest -> store) may nest
+        self._lock = threading.RLock()
         self._manifest: Optional[dict[str, Any]] = None
         self._layout: Optional[ManifestLayout] = None
         mb = 1024 * 1024
@@ -301,9 +302,13 @@ class R2SpectralService:
     @property
     def manifest(self) -> dict[str, Any]:
         if self._manifest is None:
+            # resolve the store BEFORE taking the lock: the store property
+            # takes the same lock, and doing it inside deadlocked a fresh
+            # service whose first call was metadata()/spectrum()/preview
+            store = self.store
             with self._lock:
                 if self._manifest is None:
-                    raw = self.store.get(MANIFEST_NAME)
+                    raw = store.get(MANIFEST_NAME)
                     try:
                         manifest = json.loads(raw)
                     except ValueError as exc:
